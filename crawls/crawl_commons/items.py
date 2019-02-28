@@ -15,6 +15,7 @@ class CrawlResultItem(scrapy.Item):
     category = scrapy.Field()
     urlLabel = scrapy.Field()
     crawlName = scrapy.Field()
+    crawlId = scrapy.Field()
     title = scrapy.Field()
     author = scrapy.Field()
     year = scrapy.Field()

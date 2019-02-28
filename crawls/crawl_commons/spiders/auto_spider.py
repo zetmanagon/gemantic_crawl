@@ -492,5 +492,6 @@ class AutoSpider(scrapy.Spider):  # 需要继承scrapy.Spider类
     def closed(self,reason):
         self.log("on close start stat seeds %s %s" % (self.crawlId,self.name))
         self.log(reason)
-        self.seedDB.stat_seed(self.crawlId)
+        if self.crawlId > 0:
+            self.seedDB.stat_seed(self.crawlId)
         self.log("%s %s stat seeds finished" % (self.crawlId,self.name))

@@ -254,6 +254,7 @@ class ArticleUtils(object):
         item["category"] = seed.category
         item["urlLabel"] = seed.urlLabel.split(",")
         item["crawlName"] = seed.crawlName
+        item["crawlId"] = str(seed.crawlId)
         item["timestamp"] = meta["timestamp"]
         if StringUtils.isNotEmpty(seed.organization):
             item["organization"] = seed.organization
