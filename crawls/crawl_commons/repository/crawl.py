@@ -17,7 +17,7 @@ import logging
 
 class CrawlRepository:
 
-    def __init__(self,isTest=False):
+    def __init__(self):
         settings = get_project_settings()
 
         self.client = pymongo.MongoClient(settings.get('MONGO_URI'))
@@ -28,11 +28,10 @@ class CrawlRepository:
         self.crawl = "crawl"
         self.crawlSnapshot = "crawlSnapshot"
         self.crawlStat = "crawlStat"
-        if isTest:
-            self.crawlDetail = "crawlDetailTest"
-            self.crawlSnapshot = "crawlSnapshotTest"
-            self.crawlStat = "crawlStatTest"
-            self.crawl = "crawlTest"
+        self.crawlDetailTest = "crawlDetailTest"
+        self.crawlSnapshotTest = "crawlSnapshotTest"
+        self.crawlStatTest = "crawlStatTest"
+        self.crawlTest = "crawlTest"
         # self.downloadFiles = "downloadFiles"
 
     def saveCrawlDetail(self,item):
@@ -42,6 +41,9 @@ class CrawlRepository:
         detail["_id"] = id;
         detail["createAt"] = now
         detail["updateAt"] = now
+        isTest = False
+        if "test_" in detail["crawlName"]:
+            isTest = True
         if "html" in detail:
             detail.pop("html")
         if "timestamp" in detail:
@@ -49,9 +51,16 @@ class CrawlRepository:
         if "content" in detail:
             if "contentSnapshot" in detail:
                 snapshotDetail = {"_id":id,"content":detail["contentSnapshot"],"url":detail["url"],"updateAt":now}
-                self.db[self.crawlSnapshot].save(snapshotDetail)
+                if isTest:
+                    self.db[self.crawlSnapshotTest].save(snapshotDetail)
+                else:
+                    self.db[self.crawlSnapshot].save(snapshotDetail)
+
                 detail.pop("contentSnapshot")
-            self.db[self.crawlDetail].save(detail)
+            if isTest:
+                self.db[self.crawlDetailTest].save(detail)
+            else:
+                self.db[self.crawlDetail].save(detail)
 
             self.logger.info("save %s %s" % (item["url"], id))
             urls = []
@@ -68,14 +77,21 @@ class CrawlRepository:
             if len(urls) > 0 and "publishAt" in detail:
                 self.downloadDB.download(urls,str(detail["publishAt"]))
             detail.pop("content")
-            self.db[self.crawl].save(detail)
+            if isTest:
+                self.db[self.crawlTest].save(detail)
+            else:
+                self.db[self.crawl].save(detail)
             # files = ArticleUtils.getDownloadFile(urls,detail["publishAt"])
             # for file in files:
             #     self.db[self.downloadFiles].save(file)
         elif ArticleUtils.isFile(detail["url"]):
             detail["fileType"] = "file"
-            self.db[self.crawlDetail].save(detail)
-            self.db[self.crawl].save(detail)
+            if isTest:
+                self.db[self.crawlDetail].save(detail)
+                self.db[self.crawl].save(detail)
+            else:
+                self.db[self.crawlDetail].save(detail)
+                self.db[self.crawl].save(detail)
             if "publishAt" in detail:
                 self.downloadDB.download([detail["url"]],str(detail["publishAt"]))
             # files = ArticleUtils.getDownloadFile([detail["url"]],detail["publishAt"])
