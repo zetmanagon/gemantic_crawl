@@ -11,8 +11,8 @@
 
 BOT_NAME = 'crawls'
 
-SPIDER_MODULES = ['crawls.crawl_selected.spiders','crawls.crawl_auto.spiders']
-NEWSPIDER_MODULE = 'crawls.crawl_selected.spiders'
+SPIDER_MODULES = ['crawl_selected.spiders','crawl_auto.spiders']
+NEWSPIDER_MODULE = 'crawl_selected.spiders'
 
 #######数据库配置######################################
 MONGO_URI = 'mongodb://crawl:crawl2get@10.0.0.157:27017/crawl'
@@ -118,8 +118,8 @@ FEED_EXPORT_ENCODING = 'utf-8'
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    'crawls.crawl_commons.middlewares.UserAgentMiddleware':400,
-   'crawls.crawl_commons.middlewares.CrawlSelectedDownloaderMiddleware': 543,
+    'crawl_commons.middlewares.UserAgentMiddleware':400,
+   'crawl_commons.middlewares.CrawlSelectedDownloaderMiddleware': 543,
 }
 
 # Enable or disable extensions
@@ -137,7 +137,7 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'crawls.crawl_commons.pipelines.CrawlSelectedPipeline': 300,
+    'crawl_commons.pipelines.CrawlSelectedPipeline': 300,
 }
 #DOWNLOAD_TIMEOUT=30
 

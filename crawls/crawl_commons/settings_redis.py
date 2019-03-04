@@ -11,8 +11,8 @@
 
 BOT_NAME = 'crawls'
 
-SPIDER_MODULES = ['crawls.crawl_selected.spiders','crawls.crawl_auto.spiders']
-NEWSPIDER_MODULE = 'crawls.crawl_selected.spiders'
+SPIDER_MODULES = ['crawl_selected.spiders','crawl_auto.spiders']
+NEWSPIDER_MODULE = 'crawl_selected.spiders'
 
 #######数据库配置######################################
 MONGO_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
@@ -157,9 +157,9 @@ FEED_EXPORT_ENCODING = 'utf-8'
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'crawl_selected.middlewares.UserAgentMiddleware':400,
+    'crawl_commons.middlewares.UserAgentMiddleware':400,
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-   'crawl_selected.middlewares.CrawlSelectedDownloaderMiddleware': 543,
+   'crawl_commons.middlewares.CrawlSelectedDownloaderMiddleware': 543,
 }
 
 # Enable or disable extensions
@@ -177,7 +177,7 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'crawl_selected.pipelines.CrawlSelectedPipeline': 400,
+    'crawl_commons.pipelines.CrawlSelectedPipeline': 400,
     # 'scrapy_redis.pipelines.RedisPipeline': 410,
 }
 #DOWNLOAD_TIMEOUT=30
