@@ -10,6 +10,7 @@ from scrapy.utils.project import get_project_settings
 from crawl_commons.utils.time_util import *
 from crawl_commons.utils.annotation import *
 from crawl_commons.utils.article_util import *
+from crawl_commons.utils.string_util import *
 from crawl_commons.repository.filedownload import *
 
 import logging
@@ -48,7 +49,7 @@ class CrawlRepository:
             detail.pop("html")
         if "timestamp" in detail:
             detail.pop("timestamp")
-        if "content" in detail:
+        if "content" in detail and StringUtils.isNotEmpty(detail["content"]):
             if "contentSnapshot" in detail:
                 snapshotDetail = {"_id":id,"content":detail["contentSnapshot"],"url":detail["url"],"updateAt":now}
                 if isTest:
