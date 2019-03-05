@@ -22,6 +22,8 @@ MONGO_DB = 'test_yyh'
 
 CRAWL_INFO_URL = 'http://crawl-db-service:31001/crawlInfo/unique?address=%s&crawlName=%s&project=%s'
 
+CRAWL_INFO_SCHEDULE_URL = 'http://crawl-db-service:31001/crawlInfo?crawlStatus=1&crawlType=ONLINE&address=%s&scheduleType=%s&schedule=%s'
+
 
 
 SEED_URL = 'http://crawl-db-service:31001/seed?urlStatus=1&crawlName=%s&ps=100000'
