@@ -15,7 +15,7 @@ class StringUtils(object):
 
     @classmethod
     def isEmpty(cls, str):
-        if str is None or len(str)<=0:
+        if str is None or len(StringUtils.trim(str))<=0:
             return True
         return False
 

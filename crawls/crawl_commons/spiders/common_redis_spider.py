@@ -192,6 +192,8 @@ class CommonRedisSpider(RedisSpider):  # 需要继承scrapy.Spider类
         enableDownloadFile = False
         enableDownloadImage = False
         enableSnapshot = False
+        nocontentRender = meta["nocontentRender"]
+        contentPageNumber = meta["contentPageNumber"]
         if seed.enableDownloadFile == 1:
             enableDownloadFile = True
         if seed.enableDownloadImage == 1:
@@ -201,58 +203,66 @@ class CommonRedisSpider(RedisSpider):  # 需要继承scrapy.Spider类
         detailData = {}
         if "detailData" in meta:
             detailData = meta["detailData"]
-        if len(detailData) <=0:
+        if contentPageNumber <= 1:
             detailData["url"] = url
         autoDetailData = {}
         if "autoDetailData" in meta:
             autoDetailData = meta["autoDetailData"]
-        if len(autoDetailData) <=0:
-            autoDetailData = ArticleUtils.getAutoDetail(response,enableDownloadImage,enableSnapshot,True)
-            if not self.name.startswith("history_"):
-                html = "".join(response.xpath("//html").extract())
-                autoDetailData["html"] = html
-        else:
-            pageAutoDetailData = ArticleUtils.getAutoDetail(response,enableDownloadImage,enableSnapshot,False)
-            for (k,v) in pageAutoDetailData.items():
-                ArticleUtils.mergeDict(autoDetailData, k, v)
+
+        contentAutoDetailData = ArticleUtils.getAutoDetail(contentPageNumber, response, enableDownloadImage,
+                                                           enableSnapshot)
+
         meta["autoDetailData"] = autoDetailData
         maxPageNumber = 0
-        pageContentSnapshot = None
-        nocontentRender = meta["nocontentRender"]
-        contentPageNumber = meta["contentPageNumber"]
+        pageContent = None
+        contentData = {}
         if enableDownloadFile:
             files = ArticleUtils.getContentFiles(response)
             if files is not None and len(files) > 0:
-                ArticleUtils.mergeDict(detailData, "contentFiles", files)
+                contentData["contentFiles"] = files
+                # ArticleUtils.mergeDict(detailData, "contentFiles", files)
 
         for (k, v) in regexDict.items():
             if "nextPage" == k:
                 continue
             itemValues = ArticleUtils.getResponseFieldValue(k, True, v, response)
             itemValue = None
-            if itemValues is not None and len(itemValues) > 0 and itemValues[0] is not None and StringUtils.isNotEmpty(str(itemValues[0])):
+            if itemValues is not None and len(itemValues) > 0 and itemValues[0] is not None and StringUtils.isNotEmpty(
+                    StringUtils.trim(str(itemValues[0]))):
                 itemValue = itemValues[0]
-                ArticleUtils.mergeDict(detailData, k, itemValue)
+            if itemValue is None:
+                continue
+            contentData[k] = itemValue
             if "content" == k:
+                pageContent = itemValue
                 maxPageNumber = v[-1].maxPageNumber
                 if enableDownloadImage:
-                    images = ArticleUtils.getContentImages(v,response)
+                    images = ArticleUtils.getContentImages(v, response)
                     if images is not None and len(images) > 0:
-                        ArticleUtils.mergeDict(detailData,"contentImages",images)
-                contentSnapshots = ArticleUtils.getResponseFieldValue("contentSnapshot",True,v,response)
-                if contentSnapshots is not None and len(contentSnapshots) > 0 and StringUtils.isNotEmpty(contentSnapshots[0]):
-                    pageContentSnapshot = contentSnapshots[0]
+                        contentData["contentImages"] = images
+                        # ArticleUtils.mergeDict(detailData,"contentImages",images)
+                contentSnapshots = ArticleUtils.getResponseFieldValue("contentSnapshot", True, v, response)
+                if contentSnapshots is not None and len(contentSnapshots) > 0 and StringUtils.isNotEmpty(
+                        contentSnapshots[0]):
                     if enableSnapshot:
-                        ArticleUtils.mergeDict(detailData,"contentSnapshot",contentSnapshots[0])
+                        contentData["contentSnapshot"] = contentSnapshots[0]
+                        # ArticleUtils.mergeDict(detailData,"contentSnapshot",contentSnapshots[0])
 
-        if pageContentSnapshot is None and "contentSnapshot" in autoDetailData and StringUtils.isNotEmpty(autoDetailData["contentSnapshot"]):
-            pageContentSnapshot = autoDetailData["contentSnapshot"]
-        if pageContentSnapshot is None and nocontentRender == 1 and not ArticleUtils.isRender(meta,self.name):
+        if pageContent is not None and StringUtils.isEmpty(ArticleUtils.removeAllTag(pageContent)):
+            pageContent = None
+        if pageContent is None and "content" in contentAutoDetailData and StringUtils.isNotEmpty(
+                contentAutoDetailData["content"]):
+            pageContent = ArticleUtils.removeAllTag(contentAutoDetailData["content"])
+            if StringUtils.isEmpty(pageContent):
+                pageContent = None
+
+        if pageContent is None and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
             metaCopy = meta.copy()
             metaCopy["renderType"] = 1
             metaCopy["renderSeconds"] = 5
             metaCopy["detailData"] = detailData
-            self.log("redirect url %s" % url)
+            metaCopy["autoDetailData"] = autoDetailData
+            self.log("re render url %s" % url)
             # metaCopy["parse"] = "detail"
             self._set_redis_key(url, metaCopy,True)
             #获取不到正文，尝试使用js渲染方式，针对网站部分链接的详情页使用js跳转
@@ -260,7 +270,8 @@ class CommonRedisSpider(RedisSpider):  # 需要继承scrapy.Spider类
         else:
             # with open(file="/home/yhye/tmp/crawl_data_policy/" + ArticleUtils.getArticleId(response.url) + ".html", mode='w') as f:
             #     f.write("".join(response.xpath("//html").extract()))
-
+            ArticleUtils.mergeNewDict(detailData, contentData)
+            ArticleUtils.mergeNewDict(autoDetailData, contentAutoDetailData)
             nextPageRegex = []
             if "nextPage" in regexDict:
                 nextPageRegex = regexDict["nextPage"]
@@ -272,6 +283,7 @@ class CommonRedisSpider(RedisSpider):  # 需要继承scrapy.Spider类
                     targetNextUrl = nextUrls[0]
             if StringUtils.isNotEmpty(targetNextUrl):
                 meta["detailData"] = detailData
+                meta["autoDetailData"] = autoDetailData
                 meta["contentPageNumber"] = contentPageNumber+1
                 # meta["parse"] = "detail"
                 self._set_redis_key(targetNextUrl, meta,True)
@@ -293,8 +305,10 @@ class CommonRedisSpider(RedisSpider):  # 需要继承scrapy.Spider类
                         item[k] = json.dumps(list(v.values()),ensure_ascii=False)
                     elif k not in item or StringUtils.isEmpty(ArticleUtils.removeAllTag(str(item[k]))):
                         item[k] = v
-                html = "".join(response.xpath("//html").extract())
-                item["html"] = html
+                # html = "".join(response.xpath("//html").extract())
+                # item["html"] = html
+                if "title" not in item or StringUtils.isEmpty(item["title"]):
+                    item["title"] = response.xpath("//title//text()")
                 yield item
 
 

@@ -38,6 +38,8 @@ class ArticleUtils(object):
         dd = dr00.sub("",dd)
         dr01 = re.compile(u'<body>', re.S)
         dd = dr01.sub("", dd)
+        dr02 = re.compile(u'<style.*?>.*?</style>', re.S)
+        dd = dr02.sub("", dd)
         dr = re.compile(u'<(?!p|/p|strong|/strong|b|/b)+[^>]+>', re.S)
         dd = dr.sub(u"", dd)
         dd = dd.replace('\n\n', "</p><p>")
@@ -307,6 +309,11 @@ class ArticleUtils(object):
                 detailDict[field] = detailValue
 
     @classmethod
+    def mergeNewDict(cls, detailDict, newDetailDict):
+        for (k,v) in newDetailDict.items():
+            ArticleUtils.mergeDict(detailDict,k,v)
+
+    @classmethod
     def getDownloadFile(cls,urls,publishAt):
         result = []
         for url in urls:
@@ -322,15 +329,16 @@ class ArticleUtils(object):
         return False
 
     @classmethod
-    def getAutoDetail(cls, response, enableDownloadImage=False, enableSnapshot=False, isFirstPage=True):
+    def getAutoDetail(cls, contentPageNumber,response, enableDownloadImage=False, enableSnapshot=False):
         autoDetail = {}
         try:
             html = "".join(response.xpath("//html").extract())
             doc = Document(html)
             # response.
-            if isFirstPage:
+            if contentPageNumber<=1:
                 autoDetail["title"] = doc.title()
                 autoDetail["publishAt"] = TimeUtils.get_conent_time(html)
+                autoDetail["html"] = html
             contentSnapshot = doc.summary()
             if StringUtils.isNotEmpty(ArticleUtils.removeAllTag(contentSnapshot)):
                 if enableSnapshot:
