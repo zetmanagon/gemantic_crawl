@@ -327,6 +327,7 @@ class ArticleUtils(object):
         try:
             html = "".join(response.xpath("//html").extract())
             doc = Document(html)
+            # response.
             if isFirstPage:
                 autoDetail["title"] = doc.title()
                 autoDetail["publishAt"] = TimeUtils.get_conent_time(html)
