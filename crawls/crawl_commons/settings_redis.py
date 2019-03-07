@@ -46,7 +46,7 @@ REDIS_URL = 'redis://root:GemanticYes!@10.0.0.22:7000'
 REDIS_START_URLS_KEY = '%(name)s:start_urls'
 EXTENSIONS = {
 'scrapy.extensions.telnet.TelnetConsole': None,
-    'crawl_selected.redis_extension.SetRedisInit': 500
+    'crawl_commons.redis_extension.SetRedisInit': 500
 }
 #######文件下载请求################
 # FILE_DOWNLOAD_URL = 'http://file-download-service:31001/download?urls=%s&publishAt=%s'
