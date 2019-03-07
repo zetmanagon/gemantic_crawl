@@ -48,7 +48,7 @@ class TimeUtils(object):
                 return result
         if "小时" in timeStr or "天" in timeStr or "分" in timeStr:
             return TimeUtils.convert2Mill(timeStr)
-        return None
+        return TimeUtils.getNowMill()
 
 
     @classmethod
