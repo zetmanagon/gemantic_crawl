@@ -211,7 +211,7 @@ class ArticleUtils(object):
         for postfix in ArticleUtils.FILE_POSTFIXS:
             filesRegex.append('contains(@href,"%s")' % postfix)
         postfixR = " or ".join(filesRegex)
-        links = response.xpath('//a['+postfixR+']//@href').extract()
+        links = response.xpath('//a[('+postfixR+') and text()]//@href').extract()
         names = response.xpath('//a['+postfixR+']//text()').extract()
         if len(links) <= 0:
             return None
