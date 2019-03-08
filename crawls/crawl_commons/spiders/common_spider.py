@@ -1,12 +1,6 @@
 import scrapy
 from crawl_commons.spiders.abstract_spider import AbstractSpider
-from crawl_commons.repository.seed import *
-from crawl_commons.repository.crawl import *
-from crawl_commons.utils.article_util import *
-from crawl_commons.utils.string_util import *
-from crawl_commons.utils.http_util import *
 
-import json
 #一级页面抓取通用爬虫，该爬虫不作爬取
 class CommonSpider(scrapy.Spider,AbstractSpider):  # 需要继承scrapy.Spider类
     name= "common_spider" # 定义蜘蛛名
