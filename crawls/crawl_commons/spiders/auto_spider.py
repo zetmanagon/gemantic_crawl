@@ -36,30 +36,7 @@ class AutoSpider(scrapy.Spider,AbstractSpider):  # 需要继承scrapy.Spider类
 
     def start_requests(self):  # 由此方法通过下面链接爬取页面
         return self.do_start_requests()
-        # crawlName = self.name.replace("history_", "")
-        # seeds = self.seedDB.get_seed(crawlName)
-        # timestamp = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))  # 该次爬虫的时间戳
-        # # seeds = self.get_seed_fromxls()
-        # # 从种子库的爬取
-        # for seed in seeds:
-        #     if self.crawlId == 0:
-        #         self.crawlId = seed.crawlId
-        #     # if seed.url != 'http://www.cffex.com.cn/jysgg/':
-        #     #     continue
-        #     self.crawlDB.initCrawlStat(seed.url, timestamp)  # 初始化种子统计
-        #     meta = {}
-        #     # meta["seedRegex"] = regex
-        #     meta["depthNumber"] = 0
-        #     meta["timestamp"] = timestamp
-        #     meta["pageNumber"] = 1
-        #     meta['is_Nextpage'] = False
-        #     meta["seedInfo"] = seed
-        #     meta["renderType"] = seed.renderType
-        #     # meta["renderType"] = 1
-        #     meta["pageRenderType"] = seed.pageRenderType
-        #     meta["renderSeconds"] = seed.renderSeconds
-        #     meta["nocontentRender"] = seed.nocontentRender
-        #     yield scrapy.Request(url=seed.url, meta=meta, callback=self.parse)
+
 
     def parse(self, response):
         '''起始页面解析'''
@@ -68,16 +45,20 @@ class AutoSpider(scrapy.Spider,AbstractSpider):  # 需要继承scrapy.Spider类
         start_url = meta["seedInfo"].url
         link_list = self.get_list_urls(start_url, response)
         for url in link_list.keys():
-            meta['anchorText'] = link_list[url]
-            yield scrapy.Request(url=url, meta=meta, callback=self.parseDetail)
-        if self.name.startswith("history_"):
+            metaCopy = meta.copy()
+            metaCopy['anchorText'] = link_list[url]
+            metaCopy['parse'] = 'detail'
+            yield self.do_request(url=url, meta=metaCopy)
+            # yield scrapy.Request(url=url, meta=meta, callback=self.parseDetail)
+        if self.isHistory:
             # 如果有下一页,爬下一页
             nextpage_urls = ArticleUtils.getNextPageUrl('', response)
             for url in nextpage_urls:
                 self.log("nextPage %s" % url)
                 # time.sleep(20)
                 meta['is_Nextpage']=True
-                yield scrapy.Request(url=url, meta=meta, callback=self.parse)
+                yield self.do_request(url=url, meta=meta,cleanup=True)
+                # yield scrapy.Request(url=url, meta=meta, callback=self.parse)
 
     def parseDetail(self, response):
         '''
@@ -132,7 +113,8 @@ class AutoSpider(scrapy.Spider,AbstractSpider):  # 需要继承scrapy.Spider类
         nextpage_urls = ArticleUtils.getNextPageUrl('', response)
         if StringUtils.isNotEmpty(nextpage_urls):
             meta["detailData"] = detailData
-            yield scrapy.Request(url=nextpage_urls, meta=meta, callback=self.parseDetail)
+            self.do_request(url=url, meta=meta)
+            # yield scrapy.Request(url=nextpage_urls, meta=meta, callback=self.parseDetail)
         else:
             item = ArticleUtils.meta2item(meta, detailData["url"])
             for (k, v) in detailData.items():
