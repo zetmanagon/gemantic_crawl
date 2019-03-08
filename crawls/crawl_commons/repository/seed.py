@@ -92,7 +92,7 @@ class SeedRepository:
 
 
     def get_seed_crawlId(self,crawlId):
-        url = self.seedUrlCrawlId % crawlId
+        url = self.seedUrlCrawlId % str(crawlId)
         self.logger.info("get_seed_crawlId %s" % url)
         jsonResult = HttpUtils.getUrl(url)
         list = jsonResult["data"]["list"]
@@ -100,18 +100,22 @@ class SeedRepository:
         for d in list:
             seed = WebSeed(d)
             result.append(seed)
-        self.logger.info("%s seedUrl count %d" % (crawlId,len(result)))
+        self.logger.info("%d seedUrl count %d" % (crawlId,len(result)))
         return result
 
     def get_seed(self,crawlName):
+        crawlId = self.get_crawl_id(crawlName)
+        result = self.get_seed_crawlId(crawlId)
+        return result
+
+    def get_crawl_id(self,crawlName):
         url = self.crawlInfoUrl % (self.address,crawlName,self.project)
         self.logger.info("get_crawl_info_url %s" % url)
         jsonResult = HttpUtils.getUrl(url)
-        result = []
         if "data" in jsonResult:
             crawlId = jsonResult["data"]["id"]
-            result = self.get_seed_crawlId(crawlId)
-        return result
+            return int(crawlId)
+        return -1
 
     def stat_seed(self,crawlId):
         url = self.seedStatUrl

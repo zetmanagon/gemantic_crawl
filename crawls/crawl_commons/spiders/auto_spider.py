@@ -12,7 +12,7 @@ import re
 from urllib.parse import urljoin
 import jieba
 import json
-
+from crawl_commons.spiders.abstract_spider import AbstractSpider
 from crawl_commons.items import CrawlResultItem
 from crawl_commons.repository.seed import *
 from crawl_commons.repository.crawl import *
@@ -22,41 +22,44 @@ from crawl_commons.utils.time_util import *
 # 一级页面抓取通用爬虫，该爬虫不作爬取
 
 
-class AutoSpider(scrapy.Spider):  # 需要继承scrapy.Spider类
+class AutoSpider(scrapy.Spider,AbstractSpider):  # 需要继承scrapy.Spider类
     name = "auto_spider"  # 定义蜘蛛名
     # timestamp = time.strftime('%Y-%m-%d %H-%M-%S',time.localtime(time.time()))
-    crawlId = 0
+
 
     def __init__(self, name=None, **kwargs):
-        super(AutoSpider, self).__init__(name=name, kwargs=kwargs)
-        self.seedDB = SeedRepository()
-        self.crawlDB = CrawlRepository()
+        scrapy.Spider.__init__(self, name=name, kwargs=kwargs)
+        AbstractSpider.__init__(self, self.name)
+        # super(AutoSpider, self).__init__(name=name, kwargs=kwargs)
+        # self.seedDB = SeedRepository()
+        # self.crawlDB = CrawlRepository()
 
     def start_requests(self):  # 由此方法通过下面链接爬取页面
-        crawlName = self.name.replace("history_", "")
-        seeds = self.seedDB.get_seed(crawlName)
-        timestamp = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))  # 该次爬虫的时间戳
-        # seeds = self.get_seed_fromxls()
-        # 从种子库的爬取
-        for seed in seeds:
-            if self.crawlId == 0:
-                self.crawlId = seed.crawlId
-            # if seed.url != 'http://www.cffex.com.cn/jysgg/':
-            #     continue
-            self.crawlDB.initCrawlStat(seed.url, timestamp)  # 初始化种子统计
-            meta = {}
-            # meta["seedRegex"] = regex
-            meta["depthNumber"] = 0
-            meta["timestamp"] = timestamp
-            meta["pageNumber"] = 1
-            meta['is_Nextpage'] = False
-            meta["seedInfo"] = seed
-            meta["renderType"] = seed.renderType
-            # meta["renderType"] = 1
-            meta["pageRenderType"] = seed.pageRenderType
-            meta["renderSeconds"] = seed.renderSeconds
-            meta["nocontentRender"] = seed.nocontentRender
-            yield scrapy.Request(url=seed.url, meta=meta, callback=self.parse)
+        return self.do_start_requests()
+        # crawlName = self.name.replace("history_", "")
+        # seeds = self.seedDB.get_seed(crawlName)
+        # timestamp = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))  # 该次爬虫的时间戳
+        # # seeds = self.get_seed_fromxls()
+        # # 从种子库的爬取
+        # for seed in seeds:
+        #     if self.crawlId == 0:
+        #         self.crawlId = seed.crawlId
+        #     # if seed.url != 'http://www.cffex.com.cn/jysgg/':
+        #     #     continue
+        #     self.crawlDB.initCrawlStat(seed.url, timestamp)  # 初始化种子统计
+        #     meta = {}
+        #     # meta["seedRegex"] = regex
+        #     meta["depthNumber"] = 0
+        #     meta["timestamp"] = timestamp
+        #     meta["pageNumber"] = 1
+        #     meta['is_Nextpage'] = False
+        #     meta["seedInfo"] = seed
+        #     meta["renderType"] = seed.renderType
+        #     # meta["renderType"] = 1
+        #     meta["pageRenderType"] = seed.pageRenderType
+        #     meta["renderSeconds"] = seed.renderSeconds
+        #     meta["nocontentRender"] = seed.nocontentRender
+        #     yield scrapy.Request(url=seed.url, meta=meta, callback=self.parse)
 
     def parse(self, response):
         '''起始页面解析'''

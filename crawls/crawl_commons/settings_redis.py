@@ -19,6 +19,7 @@ MONGO_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
 MONGO_DB = 'test_yyh'
 
 #######种子获取配置#########################################
+CRAWL_IP = "10.0.0.36"
 
 CRAWL_INFO_URL = 'http://crawl-db-service:31001/crawlInfo/unique?address=%s&crawlName=%s&project=%s'
 
