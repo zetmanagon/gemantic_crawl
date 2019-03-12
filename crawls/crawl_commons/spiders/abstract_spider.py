@@ -1,3 +1,10 @@
+# @Date:   12-Mar-2019
+# @Email:  Tang@jeffery.top
+# @Filename: abstract_spider.py
+# @Last modified time: 12-Mar-2019
+
+
+
 from crawl_commons.items import CrawlResultItem
 from crawl_commons.repository.seed import *
 from crawl_commons.repository.crawl import *
@@ -35,6 +42,8 @@ class AbstractSpider(object):
         timestamp = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))  # 该次爬虫的时间戳
         # 定义爬取的链接
         for seed in seeds:
+            # if seed.url != 'http://www.most.gov.cn/mostinfo/xinxifenlei/zfwzndbb/':
+            #     continue
             regex = self.seedDB.get_regex(seed.regexName)
             if isRegex and (regex is None or len(regex)<=0):
                 self.LOG.infog("%s no regex" % seed.url)
@@ -137,6 +146,8 @@ class AbstractSpider(object):
 
 
     def do_request(self,url, meta,dont_filter=False,cleanup=False):
+        if "parse" in meta and meta["parse"] == "detail" and ArticleUtils.isFile(url):
+            return scrapy.Request(url=url, meta=meta, callback=self.parseFileurl, dont_filter=dont_filter)
         if "parse" in meta and meta["parse"] == "detail":
             return scrapy.Request(url=url, meta=meta, callback=self.parseDetail,dont_filter=dont_filter)
         else:
