@@ -1,3 +1,10 @@
+# @Date:   12-Mar-2019
+# @Email:  Tang@jeffery.top
+# @Filename: settings.py
+# @Last modified time: 12-Mar-2019
+
+
+
 # -*- coding: utf-8 -*-
 
 # Scrapy settings for crawl_selected project
@@ -15,9 +22,10 @@ SPIDER_MODULES = ['crawl_test.spiders']
 NEWSPIDER_MODULE = 'crawl_test.spiders'
 
 #######数据库配置######################################
-MONGO_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
-MONGO_DB = 'test_yyh'
-
+# MONGO_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
+# MONGO_DB = 'test_yyh'
+MONGO_URI = 'localhost:27017'
+MONGO_DB = 'tzh_test'
 #######种子获取配置#########################################
 
 CRAWL_IP = "10.0.0.36"
