@@ -1,0 +1,10 @@
+*.log
+*.temp
+/build
+build
+/_pycache_
+_pycache_
+*.pyc
+/project.egg-info
+project.egg-info
+*.exe
