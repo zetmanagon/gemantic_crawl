@@ -124,10 +124,26 @@ class ArticleUtils(object):
                 break
         return contentResponse
 
+    @classmethod
+    def getResponseContents4Contentxpath(cls, xpathRegex, response):
+        regexContentArr = xpathRegex.regexContent.split("|")
+        contentResponse = None
+        for regexContent in regexContentArr:
+            contentResponse = response.xpath(regexContent)
+            contentResponseExtract = contentResponse.extract()
+            if len(contentResponseExtract) <= 0:
+                continue
+            content = ArticleUtils.removeAllTag("".join(contentResponseExtract))
+            images = ArticleUtils.getContentImages4RegexContent(regexContent,response)
+            if (StringUtils.isEmpty(content) and (images is None or len(images) <=0)):
+                continue
+            else:
+                break
+        return contentResponse
 
     @classmethod
     def getResponseContents4ContentRegex(cls, webRegexs, response):
-        contentResponse = ArticleUtils.getResponseContents4xpath(webRegexs[-1],response).extract()
+        contentResponse = ArticleUtils.getResponseContents4Contentxpath(webRegexs[-1],response).extract()
         contentRemovePage = []
         if len(contentResponse) > 1:
             for i, contentR in enumerate(contentResponse):
@@ -206,32 +222,67 @@ class ArticleUtils(object):
         return imageDict
 
     @classmethod
+    def getContentImages4RegexContent(cls, regexContent, response):
+        regexContent = regexContent + "//img//@src"
+        images = response.xpath(regexContent).extract()
+        return images
+
+    @classmethod
     def getContentFiles(cls, response):
         filesRegex = []
         for postfix in ArticleUtils.FILE_POSTFIXS:
             filesRegex.append('contains(@href,"%s")' % postfix)
         postfixR = " or ".join(filesRegex)
-        links = response.xpath('//a[('+postfixR+') and text()]//@href').extract()
-        names = response.xpath('//a['+postfixR+']//text()').extract()
+        hrefs = response.xpath('//a[(' + postfixR + ') and text()]').extract()
+        links = response.xpath('//a[(' + postfixR + ') and text()]//@href').extract()
+        # names = response.xpath('//a[' + postfixR + ']//text()').extract()
         if len(links) <= 0:
             return None
         linkDict = {}
         nameDict = {}
-        for i,link in enumerate(links):
+        for i, link in enumerate(links):
             if not ArticleUtils.isFile(link):
                 continue
-            linkDict[link] = ArticleUtils.getFullUrl(link,response.url)
-            if i < len(names):
-                name = ArticleUtils.removeAllTag(names[i])
+            linkDict[link] = ArticleUtils.getFullUrl(link, response.url)
+            if i < len(hrefs):
+                name = ArticleUtils.removeAllTag(hrefs[i])
                 nameDict[link] = name
         fileDict = {}
-        for (k,v) in linkDict.items():
+        for (k, v) in linkDict.items():
             contentFileName = ""
             if k in nameDict:
                 contentFileName = nameDict[k]
-            fileInfo = {"id":ArticleUtils.getArticleId(v),"name":contentFileName,"contentUrl":k,"url":v}
+            fileInfo = {"id": ArticleUtils.getArticleId(v), "name": contentFileName, "contentUrl": k, "url": v}
             fileDict[v] = fileInfo
         return fileDict
+
+    # @classmethod
+    # def getContentFiles(cls, response):
+    #     filesRegex = []
+    #     for postfix in ArticleUtils.FILE_POSTFIXS:
+    #         filesRegex.append('contains(@href,"%s")' % postfix)
+    #     postfixR = " or ".join(filesRegex)
+    #     links = response.xpath('//a[('+postfixR+') and text()]//@href').extract()
+    #     names = response.xpath('//a['+postfixR+']//text()').extract()
+    #     if len(links) <= 0:
+    #         return None
+    #     linkDict = {}
+    #     nameDict = {}
+    #     for i,link in enumerate(links):
+    #         if not ArticleUtils.isFile(link):
+    #             continue
+    #         linkDict[link] = ArticleUtils.getFullUrl(link,response.url)
+    #         if i < len(names):
+    #             name = ArticleUtils.removeAllTag(names[i])
+    #             nameDict[link] = name
+    #     fileDict = {}
+    #     for (k,v) in linkDict.items():
+    #         contentFileName = ""
+    #         if k in nameDict:
+    #             contentFileName = nameDict[k]
+    #         fileInfo = {"id":ArticleUtils.getArticleId(v),"name":contentFileName,"contentUrl":k,"url":v}
+    #         fileDict[v] = fileInfo
+    #     return fileDict
 
     @classmethod
     def isFile(cls, fileName):

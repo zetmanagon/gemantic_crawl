@@ -169,12 +169,12 @@ class AbstractSpider(object):
         if "autoDetailData" in meta:
             autoDetailData = meta["autoDetailData"]
 
-        contentAutoDetailData = ArticleUtils.getAutoDetail(contentPageNumber, response, enableDownloadImage,
-                                                           enableSnapshot)
+        contentAutoDetailData = ArticleUtils.getAutoDetail(contentPageNumber, response, enableDownloadImage,enableSnapshot)
 
         meta["autoDetailData"] = autoDetailData
         maxPageNumber = 0
         pageContent = None
+        pageContentImages = None
         contentData = {}
         if enableDownloadFile:
             files = ArticleUtils.getContentFiles(response)
@@ -187,8 +187,7 @@ class AbstractSpider(object):
                 continue
             itemValues = ArticleUtils.getResponseFieldValue(k, True, v, response)
             itemValue = None
-            if itemValues is not None and len(itemValues) > 0 and itemValues[0] is not None and StringUtils.isNotEmpty(
-                    StringUtils.trim(str(itemValues[0]))):
+            if itemValues is not None and len(itemValues) > 0 and itemValues[0] is not None and StringUtils.isNotEmpty(StringUtils.trim(str(itemValues[0]))):
                 itemValue = itemValues[0]
             if itemValue is None:
                 continue
@@ -200,18 +199,17 @@ class AbstractSpider(object):
                     images = ArticleUtils.getContentImages(v, response)
                     if images is not None and len(images) > 0:
                         contentData["contentImages"] = images
+                        pageContentImages = images
                         # ArticleUtils.mergeDict(detailData,"contentImages",images)
                 contentSnapshots = ArticleUtils.getResponseFieldValue("contentSnapshot", True, v, response)
-                if contentSnapshots is not None and len(contentSnapshots) > 0 and StringUtils.isNotEmpty(
-                        contentSnapshots[0]):
+                if contentSnapshots is not None and len(contentSnapshots) > 0 and StringUtils.isNotEmpty(contentSnapshots[0]):
                     if enableSnapshot:
                         contentData["contentSnapshot"] = contentSnapshots[0]
                         # ArticleUtils.mergeDict(detailData,"contentSnapshot",contentSnapshots[0])
 
-        if pageContent is not None and StringUtils.isEmpty(ArticleUtils.removeAllTag(pageContent)):
+        if pageContent is not None and pageContentImages is None and StringUtils.isEmpty(ArticleUtils.removeAllTag(pageContent)):
             pageContent = None
-        if pageContent is None and "content" in contentAutoDetailData and StringUtils.isNotEmpty(
-                contentAutoDetailData["content"]):
+        if pageContent is None and "content" in contentAutoDetailData and StringUtils.isNotEmpty(contentAutoDetailData["content"]):
             pageContent = ArticleUtils.removeAllTag(contentAutoDetailData["content"])
             if StringUtils.isEmpty(pageContent):
                 pageContent = None
@@ -259,14 +257,19 @@ class AbstractSpider(object):
                     else:
                         itemValue = v
                     item[k] = itemValue
+                detailImages = None
+                if "contentImages" in detailData:
+                    detailImages = detailData["contentImages"]
                 for (k, v) in autoDetailData.items():
+                    if detailImages is not None and ("content" == k or "contentSnapshot" == k):
+                        continue
                     if "contentImages" == k and k not in item:
                         item[k] = json.dumps(list(v.values()), ensure_ascii=False)
                     elif k not in item or StringUtils.isEmpty(ArticleUtils.removeAllTag(str(item[k]))):
                         item[k] = v
+
                 if "title" not in item or StringUtils.isEmpty(item["title"]):
                     item["title"] = response.xpath("//title//text()")
-
                 yield item
 
     def do_closed(self,reason):
