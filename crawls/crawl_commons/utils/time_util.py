@@ -30,7 +30,7 @@ class TimeUtils(object):
             return None
 
     @classmethod
-    def convert2Mill4Default(cls, timeStr, format):
+    def convert2Mill4Default(cls, timeStr, format,isAuto=False):
         result = None
         if StringUtils.isNotEmpty(format) and "pre_time" == format:
             result = TimeUtils.convert2Mill(timeStr)
@@ -48,7 +48,10 @@ class TimeUtils(object):
                 return result
         if "小时" in timeStr or "天" in timeStr or "分" in timeStr:
             return TimeUtils.convert2Mill(timeStr)
-        return TimeUtils.getNowMill()
+        if isAuto:
+            return TimeUtils.getNowMill()
+        else:
+            return None
 
 
     @classmethod
@@ -108,7 +111,7 @@ class TimeUtils(object):
                             if time_get.find(ele) == -1:
                                 time_get += ele
                         # print(time_get)
-                        time_get = TimeUtils.convert2Mill4Default(time_get, "")
+                        time_get = TimeUtils.convert2Mill4Default(time_get, "",True)
                     except OverflowError:
                         i = 0
                         while i < len(link_list):
@@ -118,7 +121,7 @@ class TimeUtils(object):
                                     time_get += ele
                             # print(time_get)
                             try:
-                                time_get = TimeUtils.convert2Mill4Default(time_get, "")
+                                time_get = TimeUtils.convert2Mill4Default(time_get, "",True)
                             except OverflowError:
                                 i = i + 1
                                 continue
@@ -132,7 +135,7 @@ class TimeUtils(object):
                                 time_get += ele
                         # print(time_get)
                         try:
-                            time_get = TimeUtils.convert2Mill4Default(time_get, "")
+                            time_get = TimeUtils.convert2Mill4Default(time_get, "",True)
                         except OverflowError:
                             i = i + 1
                             continue

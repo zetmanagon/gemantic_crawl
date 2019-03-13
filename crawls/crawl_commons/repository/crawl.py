@@ -42,6 +42,12 @@ class CrawlRepository:
         detail["_id"] = id;
         detail["createAt"] = now
         detail["updateAt"] = now
+        isErrorPage = ArticleUtils.isErrorPage(detail)
+        if isErrorPage:
+            self.logger.info("errorPage %s %s" % (detail["url"], id))
+            return
+        if "headTitle" in detail:
+            detail.pop("headTitle")
         isTest = False
         if "test_" in detail["crawlName"]:
             isTest = True

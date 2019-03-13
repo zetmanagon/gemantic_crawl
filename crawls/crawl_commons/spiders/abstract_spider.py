@@ -169,8 +169,8 @@ class AbstractSpider(object):
         if "autoDetailData" in meta:
             autoDetailData = meta["autoDetailData"]
 
-        contentAutoDetailData = ArticleUtils.getAutoDetail(contentPageNumber, response, enableDownloadImage,enableSnapshot)
-
+        contentAutoData = None
+        html = "".join(response.xpath("//html").extract())
         meta["autoDetailData"] = autoDetailData
         maxPageNumber = 0
         pageContent = None
@@ -209,9 +209,9 @@ class AbstractSpider(object):
 
         if pageContent is not None and pageContentImages is None and StringUtils.isEmpty(ArticleUtils.removeAllTag(pageContent)):
             pageContent = None
-        if pageContent is None and "content" in contentAutoDetailData and StringUtils.isNotEmpty(contentAutoDetailData["content"]):
-            pageContent = ArticleUtils.removeAllTag(contentAutoDetailData["content"])
-            if StringUtils.isEmpty(pageContent):
+        if pageContent is None:
+            contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber, html, enableDownloadImage,enableSnapshot)
+            if contentAutoData is not None and "content" in contentAutoData and StringUtils.isEmpty(ArticleUtils.removeAllTag(contentAutoData["content"])):
                 pageContent = None
 
         if pageContent is None and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
@@ -225,8 +225,13 @@ class AbstractSpider(object):
             # 获取不到正文，尝试使用js渲染方式，针对网站部分链接的详情页使用js跳转
             # yield scrapy.Request(url=url, meta=metaCopy, callback=self.parseDetail, dont_filter=True)
         else:
+            if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData:
+                autoDetailData["publishAt"] = TimeUtils.get_conent_time(html)
+            if contentAutoData is None and ("title" not in detailData or pageContent is None):
+                contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber,html, enableDownloadImage, enableSnapshot)
+            ArticleUtils.mergeNewDict(autoDetailData, contentAutoData)
             ArticleUtils.mergeNewDict(detailData, contentData)
-            ArticleUtils.mergeNewDict(autoDetailData, contentAutoDetailData)
+
             # with open(file="/home/yhye/tmp/crawl_data_policy/" + ArticleUtils.getArticleId(response.url) + ".html", mode='w') as f:
             #     f.write("".join(response.xpath("//html").extract()))
 
@@ -268,8 +273,10 @@ class AbstractSpider(object):
                     elif k not in item or StringUtils.isEmpty(ArticleUtils.removeAllTag(str(item[k]))):
                         item[k] = v
 
+                item["headTitle"] = StringUtils.trim(ArticleUtils.removeAllTag("".join(response.xpath("//title//text()").extract())))
                 if "title" not in item or StringUtils.isEmpty(item["title"]):
-                    item["title"] = response.xpath("//title//text()")
+                    item["title"] = item["headTitle"]
+                item["html"] = html
                 yield item
 
     def do_closed(self,reason):
