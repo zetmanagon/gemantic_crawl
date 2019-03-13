@@ -135,7 +135,7 @@ class AutoSpider(scrapy.Spider,AbstractSpider):  # 需要继承scrapy.Spider类
                     itemValue = v
                 item[k] = itemValue
             item['html'] = html
-            item["headTitle"] = response.xpath("//title//text()")
+            item["headTitle"] = StringUtils.trim(ArticleUtils.removeAllTag("".join(response.xpath("//title//text()").extract())))
             yield item
     def get_list_urls(self, starturl, response):
         print('*******************************************')
