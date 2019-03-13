@@ -47,7 +47,8 @@ class AutoSpider(scrapy.Spider,AbstractSpider):  # 需要继承scrapy.Spider类
             metaCopy = meta.copy()
             metaCopy['anchorText'] = link_list[url]
             metaCopy['parse'] = 'detail'
-            yield self.do_request(url=url, meta=metaCopy)
+            if not ArticleUtils.isFile(url):
+                yield self.do_request(url=url, meta=metaCopy)
             # yield scrapy.Request(url=url, meta=meta, callback=self.parseDetail)
         if self.isHistory:
             # 如果有下一页,爬下一页
