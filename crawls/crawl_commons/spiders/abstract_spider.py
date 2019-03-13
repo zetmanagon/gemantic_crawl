@@ -225,12 +225,14 @@ class AbstractSpider(object):
             # 获取不到正文，尝试使用js渲染方式，针对网站部分链接的详情页使用js跳转
             # yield scrapy.Request(url=url, meta=metaCopy, callback=self.parseDetail, dont_filter=True)
         else:
+            ArticleUtils.mergeNewDict(detailData, contentData)
+
             if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData:
                 autoDetailData["publishAt"] = TimeUtils.get_conent_time(html)
             if contentAutoData is None and ("title" not in detailData or pageContent is None):
                 contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber,html, enableDownloadImage, enableSnapshot)
             ArticleUtils.mergeNewDict(autoDetailData, contentAutoData)
-            ArticleUtils.mergeNewDict(detailData, contentData)
+
 
             # with open(file="/home/yhye/tmp/crawl_data_policy/" + ArticleUtils.getArticleId(response.url) + ".html", mode='w') as f:
             #     f.write("".join(response.xpath("//html").extract()))
