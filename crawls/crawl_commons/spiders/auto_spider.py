@@ -1,6 +1,6 @@
 # @Date:   2018-12-24T10:24:01+08:00
 # @Email:  tang@jeffery.top
-# @Last modified time: 12-Mar-2019
+# @Last modified time: 13-Mar-2019
 # @Copyright: jeafi
 
 from readability import Document
@@ -137,42 +137,7 @@ class AutoSpider(scrapy.Spider,AbstractSpider):  # 需要继承scrapy.Spider类
             item['html'] = html
 
             yield item
-    def parseFileurl(self, response):
-        '''
-        处理正文页是纯文件的response
-        @param response：
-        @return item
-        '''
-        meta = response.meta
-        url = response.url
-        seed = meta["seedInfo"]
-        detailData = {}
-        if "detailData" in meta:
-            detailData = meta["detailData"]
-        if len(detailData) <= 0:
-            detailData["title"] = meta['anchorText'].strip()
-            if detailData["title"].find('...') != -1 or detailData["title"] == '':
-                detailData["title"] = "NoNameFile"
-            ts = time.strptime(meta["timestamp"], "%Y-%m-%d %H-%M-%S")
-            ts = str(int(time.mktime(ts))*1000)
-            detailData["publishAt"] = ts
-            detailData["url"] = url
-        detailData["html"] = "This page doesn't have content,it is a file's url."
-        ArticleUtils.mergeDict(detailData, "content", "This page doesn't have content,it is a file url.")
-        file = {url:{"id":ArticleUtils.getArticleId(url),"name":detailData["title"],"contentUrl":url,"url":url}}
-        ArticleUtils.mergeDict(detailData, "contentFiles", file)
-        item = ArticleUtils.meta2item(meta, detailData["url"])
-        for (k, v) in detailData.items():
-            itemValue = None
-            if "category" == k and k in item:
-                itemValue = item[k] + "/" + v
-            elif "contentImages" == k or "contentFiles" == k:
-                itemValue = json.dumps(list(v.values()), ensure_ascii=False)
-            else:
-                itemValue = v
-            item[k] = itemValue
-        return item
-        
+
     def get_list_urls(self, starturl, response):
         print('*******************************************')
         print(starturl)
