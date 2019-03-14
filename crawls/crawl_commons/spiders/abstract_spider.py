@@ -248,7 +248,8 @@ class AbstractSpider(object):
                 nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex, response)
                 if len(nextUrls) > 0 and StringUtils.isNotEmpty(nextUrls[0]):
                     targetNextUrl = nextUrls[0]
-            if StringUtils.isNotEmpty(targetNextUrl):
+            #防止死循环翻页
+            if StringUtils.isNotEmpty(targetNextUrl) and contentPageNumber <= 100:
                 meta["detailData"] = detailData
                 meta["autoDetailData"] = autoDetailData
                 meta["contentPageNumber"] = contentPageNumber + 1
