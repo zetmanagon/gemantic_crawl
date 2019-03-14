@@ -210,7 +210,8 @@ class AbstractSpider(object):
         if pageContent is not None and pageContentImages is None and StringUtils.isEmpty(ArticleUtils.removeAllTag(pageContent)):
             pageContent = None
         if pageContent is None:
-            contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber, html, enableDownloadImage,enableSnapshot)
+            if contentAutoData is None:
+                contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber, html, enableDownloadImage,enableSnapshot)
             if contentAutoData is not None and "content" in contentAutoData and StringUtils.isEmpty(ArticleUtils.removeAllTag(contentAutoData["content"])):
                 pageContent = None
 
