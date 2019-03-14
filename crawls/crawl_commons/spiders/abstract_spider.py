@@ -229,7 +229,7 @@ class AbstractSpider(object):
 
             if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData:
                 autoDetailData["publishAt"] = TimeUtils.get_conent_time(html)
-            if contentAutoData is None and ("title" not in detailData or pageContent is None):
+            if contentAutoData is None and ("title" not in detailData or StringUtils.isEmpty(pageContent)):
                 contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber,html, enableDownloadImage, enableSnapshot)
             ArticleUtils.mergeNewDict(autoDetailData, contentAutoData)
 
