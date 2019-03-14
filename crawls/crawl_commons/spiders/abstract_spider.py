@@ -200,6 +200,7 @@ class AbstractSpider(object):
                     if images is not None and len(images) > 0:
                         contentData["contentImages"] = images
                         pageContentImages = images
+
                         # ArticleUtils.mergeDict(detailData,"contentImages",images)
                 contentSnapshots = ArticleUtils.getResponseFieldValue("contentSnapshot", True, v, response)
                 if contentSnapshots is not None and len(contentSnapshots) > 0 and StringUtils.isNotEmpty(contentSnapshots[0]):
@@ -212,7 +213,7 @@ class AbstractSpider(object):
         if pageContent is None:
             if contentAutoData is None:
                 contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber, html, enableDownloadImage,enableSnapshot)
-            if contentAutoData is not None and "content" in contentAutoData and StringUtils.isEmpty(ArticleUtils.removeAllTag(contentAutoData["content"])):
+            if contentAutoData is not None and "content" in contentAutoData and StringUtils.isEmpty(StringUtils.trim(ArticleUtils.removeAllTag(contentAutoData["content"]))):
                 pageContent = None
 
         if pageContent is None and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
