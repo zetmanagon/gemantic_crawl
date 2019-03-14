@@ -318,6 +318,8 @@ class ArticleUtils(object):
             for nextUrl in nextUrls:
                 if StringUtils.isEmpty(nextUrl):
                     continue
+                if "javascript:" in nextUrl:
+                    continue
                 nextUrlTmp = nextUrl.replace('"',"")
                 nextUrlTmp = nextUrlTmp.replace("'","")
                 if StringUtils.isEmpty(nextUrlTmp):
@@ -325,6 +327,7 @@ class ArticleUtils(object):
                 if StringUtils.isNotEmpty(resultFilterRegex) and not re.match(resultFilterRegex, nextUrlTmp):
                     continue
                 targetUrl = ArticleUtils.getFullUrl(nextUrlTmp,response.url)
+
                 targetNextUrls.append(targetUrl)
         return targetNextUrls
 
