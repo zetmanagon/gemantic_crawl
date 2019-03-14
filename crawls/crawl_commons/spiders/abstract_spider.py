@@ -173,7 +173,7 @@ class AbstractSpider(object):
         html = "".join(response.xpath("//html").extract())
         meta["autoDetailData"] = autoDetailData
         maxPageNumber = 0
-        pageContent = None
+        pageContent = ""
         pageContentImages = None
         contentData = {}
         if enableDownloadFile:
@@ -193,13 +193,12 @@ class AbstractSpider(object):
                 continue
             contentData[k] = itemValue
             if "content" == k:
-                pageContent = itemValue
+                pageContent = ArticleUtils.removeAllTag(itemValue)
                 maxPageNumber = v[-1].maxPageNumber
-                if enableDownloadImage:
-                    images = ArticleUtils.getContentImages(v, response)
-                    if images is not None and len(images) > 0:
-                        contentData["contentImages"] = images
-                        pageContentImages = images
+                images = ArticleUtils.getContentImages(v, response)
+                if images is not None and len(images) > 0:
+                    contentData["contentImages"] = images
+                    pageContentImages = images
 
                         # ArticleUtils.mergeDict(detailData,"contentImages",images)
                 contentSnapshots = ArticleUtils.getResponseFieldValue("contentSnapshot", True, v, response)
@@ -208,15 +207,14 @@ class AbstractSpider(object):
                         contentData["contentSnapshot"] = contentSnapshots[0]
                         # ArticleUtils.mergeDict(detailData,"contentSnapshot",contentSnapshots[0])
 
-        if pageContent is not None and pageContentImages is None and StringUtils.isEmpty(ArticleUtils.removeAllTag(pageContent)):
-            pageContent = None
-        if pageContent is None:
+        if StringUtils.isEmpty(pageContent):
             if contentAutoData is None:
                 contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber, html, enableDownloadImage,enableSnapshot)
-            if contentAutoData is not None and "content" in contentAutoData and StringUtils.isEmpty(StringUtils.trim(ArticleUtils.removeAllTag(contentAutoData["content"]))):
-                pageContent = None
+            if "content" in contentAutoData:
+                pageContent = ArticleUtils.removeAllTag(contentAutoData["content"])
 
-        if pageContent is None and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
+
+        if StringUtils.isEmpty(pageContent) and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
             metaCopy = meta.copy()
             metaCopy["renderType"] = 1
             metaCopy["renderSeconds"] = 5
