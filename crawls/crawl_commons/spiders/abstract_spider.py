@@ -43,8 +43,8 @@ class AbstractSpider(object):
         timestamp = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))  # 该次爬虫的时间戳
         # 定义爬取的链接
         for seed in seeds:
-            if seed.url != 'http://www.sse.com.cn/lawandrules/rules/law/adminis/':
-                continue
+            # if seed.url != 'http://www.sse.com.cn/lawandrules/rules/law/adminis/':
+            #     continue
             regex = self.seedDB.get_regex(seed.regexName)
             if isRegex and (regex is None or len(regex)<=0):
                 self.LOG.infog("%s no regex" % seed.url)
