@@ -1,6 +1,6 @@
 # @Date:   2018-12-24T10:24:01+08:00
 # @Email:  tang@jeffery.top
-# @Last modified time: 13-Mar-2019
+# @Last modified time: 15-Mar-2019
 # @Copyright: jeafi
 
 from readability import Document
@@ -47,8 +47,7 @@ class AutoSpider(scrapy.Spider,AbstractSpider):  # 需要继承scrapy.Spider类
             metaCopy = meta.copy()
             metaCopy['anchorText'] = link_list[url]
             metaCopy['parse'] = 'detail'
-            if not ArticleUtils.isFile(url):
-                yield self.do_request(url=url, meta=metaCopy)
+            yield self.do_request(url=url, meta=metaCopy)
             # yield scrapy.Request(url=url, meta=meta, callback=self.parseDetail)
         if self.isHistory:
             # 如果有下一页,爬下一页

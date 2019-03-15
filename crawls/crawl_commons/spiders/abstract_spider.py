@@ -1,7 +1,7 @@
 # @Date:   12-Mar-2019
 # @Email:  Tang@jeffery.top
 # @Filename: abstract_spider.py
-# @Last modified time: 13-Mar-2019
+# @Last modified time: 15-Mar-2019
 
 
 
@@ -13,6 +13,7 @@ from crawl_commons.utils.string_util import *
 from crawl_commons.utils.http_util import *
 import scrapy
 import logging
+import time
 
 class AbstractSpider(object):
 
@@ -42,8 +43,8 @@ class AbstractSpider(object):
         timestamp = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))  # 该次爬虫的时间戳
         # 定义爬取的链接
         for seed in seeds:
-            if seed.url != 'http://www.most.gov.cn/mostinfo/xinxifenlei/zfwzndbb/':
-                continue
+            # if seed.url != 'http://www.sse.com.cn/lawandrules/rules/law/adminis/':
+            #     continue
             regex = self.seedDB.get_regex(seed.regexName)
             if isRegex and (regex is None or len(regex)<=0):
                 self.LOG.infog("%s no regex" % seed.url)
@@ -151,19 +152,18 @@ class AbstractSpider(object):
                 return scrapy.Request(url=url, meta=meta, callback=self.parseDetail,dont_filter=dont_filter)
             else:
                 item = self.parseFileurl(url=url, meta=meta)
+                print(item)
                 self.crawlDB.saveCrawlDetail(item)
-                if  not spider.name.startswith("history_"):
-                    self.crawldb.saveCrawlStat(item)
+                # self.crawldb.saveCrawlStat(item)
         else:
             return scrapy.Request(url=url, meta=meta, callback=self.parse,dont_filter=dont_filter)
 
-    def parseFileurl(self, url , meta):
+    def parseFileurl(self, url, meta):
         '''
         处理正文页是纯文件的response
         @param response：
         @return item
         '''
-        seed = meta["seedInfo"]
         detailData = {}
         if "detailData" in meta:
             detailData = meta["detailData"]
