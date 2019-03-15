@@ -1,3 +1,10 @@
+# @Date:   12-Mar-2019
+# @Email:  Tang@jeffery.top
+# @Filename: abstract_spider.py
+# @Last modified time: 15-Mar-2019
+
+
+
 from crawl_commons.items import CrawlResultItem
 from crawl_commons.repository.seed import *
 from crawl_commons.repository.crawl import *
@@ -6,6 +13,7 @@ from crawl_commons.utils.string_util import *
 from crawl_commons.utils.http_util import *
 import scrapy
 import logging
+import time
 
 class AbstractSpider(object):
 
@@ -35,6 +43,8 @@ class AbstractSpider(object):
         timestamp = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))  # 该次爬虫的时间戳
         # 定义爬取的链接
         for seed in seeds:
+            # if seed.url != 'http://www.sse.com.cn/lawandrules/rules/law/adminis/':
+            #     continue
             regex = self.seedDB.get_regex(seed.regexName)
             if isRegex and (regex is None or len(regex)<=0):
                 self.LOG.infog("%s no regex" % seed.url)
@@ -137,11 +147,49 @@ class AbstractSpider(object):
 
 
     def do_request(self,url, meta,dont_filter=False,cleanup=False):
-        if "parse" in meta and meta["parse"] == "detail":
-            return scrapy.Request(url=url, meta=meta, callback=self.parseDetail,dont_filter=dont_filter)
+        if "parse" in meta and meta["parse"] == "detail" :
+            if not ArticleUtils.isFile(url):
+                return scrapy.Request(url=url, meta=meta, callback=self.parseDetail,dont_filter=dont_filter)
+            else:
+                item = self.parseFileurl(url=url, meta=meta)
+                print(item)
+                self.crawlDB.saveCrawlDetail(item)
+                # self.crawldb.saveCrawlStat(item)
         else:
             return scrapy.Request(url=url, meta=meta, callback=self.parse,dont_filter=dont_filter)
 
+    def parseFileurl(self, url, meta):
+        '''
+        处理正文页是纯文件的response
+        @param response：
+        @return item
+        '''
+        detailData = {}
+        if "detailData" in meta:
+            detailData = meta["detailData"]
+        if len(detailData) <= 0:
+            detailData["title"] = meta['anchorText'].strip()
+            if detailData["title"].find('...') != -1 or detailData["title"] == '':
+                detailData["title"] = "NoNameFile"
+            ts = time.strptime(meta["timestamp"], "%Y-%m-%d %H-%M-%S")
+            ts = str(int(time.mktime(ts))*1000)
+            detailData["publishAt"] = ts
+            detailData["url"] = url
+        detailData["html"] = "This page doesn't have content,it is a file's url."
+        ArticleUtils.mergeDict(detailData, "content", "This page doesn't have content,it is a file url.")
+        file = {url:{"id":ArticleUtils.getArticleId(url),"name":detailData["title"],"contentUrl":url,"url":url}}
+        ArticleUtils.mergeDict(detailData, "contentFiles", file)
+        item = ArticleUtils.meta2item(meta, detailData["url"])
+        for (k, v) in detailData.items():
+            itemValue = None
+            if "category" == k and k in item:
+                itemValue = item[k] + "/" + v
+            elif "contentImages" == k or "contentFiles" == k:
+                itemValue = json.dumps(list(v.values()), ensure_ascii=False)
+            else:
+                itemValue = v
+            item[k] = itemValue
+        return item
 
     def do_parse_detal_regex(self, response):
         meta = response.meta
