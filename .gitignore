@@ -8,3 +8,5 @@ _pycache_
 /project.egg-info
 project.egg-info
 *.exe
+*.cfg
+*.setting
