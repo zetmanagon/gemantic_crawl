@@ -148,48 +148,11 @@ class AbstractSpider(object):
 
     def do_request(self,url, meta,dont_filter=False,cleanup=False):
         if "parse" in meta and meta["parse"] == "detail" :
-            if not ArticleUtils.isFile(url):
-                return scrapy.Request(url=url, meta=meta, callback=self.parseDetail,dont_filter=dont_filter)
-            else:
-                item = self.parseFileurl(url=url, meta=meta)
-                print(item)
-                self.crawlDB.saveCrawlDetail(item)
-                # self.crawldb.saveCrawlStat(item)
+            return scrapy.Request(url=url, meta=meta, callback=self.parseDetail,dont_filter=dont_filter)
         else:
             return scrapy.Request(url=url, meta=meta, callback=self.parse,dont_filter=dont_filter)
 
-    def parseFileurl(self, url, meta):
-        '''
-        处理正文页是纯文件的response
-        @param response：
-        @return item
-        '''
-        detailData = {}
-        if "detailData" in meta:
-            detailData = meta["detailData"]
-        if len(detailData) <= 0:
-            detailData["title"] = meta['anchorText'].strip()
-            if detailData["title"].find('...') != -1 or detailData["title"] == '':
-                detailData["title"] = "NoNameFile"
-            ts = time.strptime(meta["timestamp"], "%Y-%m-%d %H-%M-%S")
-            ts = str(int(time.mktime(ts))*1000)
-            detailData["publishAt"] = ts
-            detailData["url"] = url
-        detailData["html"] = "This page doesn't have content,it is a file's url."
-        ArticleUtils.mergeDict(detailData, "content", "This page doesn't have content,it is a file url.")
-        file = {url:{"id":ArticleUtils.getArticleId(url),"name":detailData["title"],"contentUrl":url,"url":url}}
-        ArticleUtils.mergeDict(detailData, "contentFiles", file)
-        item = ArticleUtils.meta2item(meta, detailData["url"])
-        for (k, v) in detailData.items():
-            itemValue = None
-            if "category" == k and k in item:
-                itemValue = item[k] + "/" + v
-            elif "contentImages" == k or "contentFiles" == k:
-                itemValue = json.dumps(list(v.values()), ensure_ascii=False)
-            else:
-                itemValue = v
-            item[k] = itemValue
-        return item
+
 
     def do_parse_detal_regex(self, response):
         meta = response.meta
