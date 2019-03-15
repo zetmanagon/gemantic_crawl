@@ -2,8 +2,8 @@
 *.temp
 /build
 build
-/_pycache_
-_pycache_
+/__pycache__
+__pycache__
 *.pyc
 /project.egg-info
 project.egg-info
