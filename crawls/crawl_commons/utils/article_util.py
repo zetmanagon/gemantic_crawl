@@ -101,6 +101,12 @@ class ArticleUtils(object):
         return urljoin(referer,urlTmp)
 
     @classmethod
+    def getSite(cls, url):
+        uparse = urlparse(url)
+        return uparse.netloc
+
+
+    @classmethod
     def getResponseContents4WebRegex(cls, webRegexs, response):
         contentResponse = response
         for i, regex in enumerate(webRegexs):

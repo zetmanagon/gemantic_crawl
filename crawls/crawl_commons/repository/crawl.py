@@ -114,13 +114,21 @@ class CrawlRepository:
         self.saveCrawlDetail(item)
 
     def saveCrawlStat(self, item):
+        if "content" not in item:
+            return
+        content = ArticleUtils.removeAllTag(item["content"])
+        url = item["url"]
+        referer = item["referer"]
+        urlSite = ArticleUtils.getSite(url)
+        if urlSite not in referer:
+            return
         postiveItem = 0  # 标示爬取是否成功（content是否有内容）
-        if item["content"] != '' and item["content"] != '<p><b></p>':
+        if StringUtils.isNotEmpty(content):
             postiveItem = 1
-        condition = {'seed': item["referer"], 'time': item["timestamp"]}
+        condition = {'seed': referer, 'time': item["timestamp"]}
         count = self.db[self.crawlStat].find_one(condition)  # 查询是否存在记录
         if count is None:
-            self.db[self.crawlStat].save({'seed': item["referer"], "time": item["timestamp"], "all": 1, "success": postiveItem,
+            self.db[self.crawlStat].save({'seed': referer, "time": item["timestamp"], "all": 1, "success": postiveItem,
                                 "html": item['html']})
         else:
             if len(item['html']) > len(count['html']):
