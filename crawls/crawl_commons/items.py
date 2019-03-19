@@ -17,6 +17,7 @@ class CrawlResultItem(scrapy.Item):
     crawlName = scrapy.Field()
     crawlId = scrapy.Field()
     title = scrapy.Field()
+    headTitle = scrapy.Field()
     author = scrapy.Field()
     year = scrapy.Field()
     timeRange = scrapy.Field()

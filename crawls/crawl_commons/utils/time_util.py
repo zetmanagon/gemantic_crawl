@@ -25,12 +25,15 @@ class TimeUtils(object):
     @classmethod
     def convert2Mill4Format(cls,timeStr, format):
         try:
-            return int(time.mktime(time.strptime(timeStr, format)) * 1000)
+            timeMill = int(time.mktime(time.strptime(timeStr, format)) * 1000)
+            if timeMill < 0:
+                timeMill = 0
+            return timeMill
         except ValueError as e:
             return None
 
     @classmethod
-    def convert2Mill4Default(cls, timeStr, format):
+    def convert2Mill4Default(cls, timeStr, format,isAuto=False):
         result = None
         if StringUtils.isNotEmpty(format) and "pre_time" == format:
             result = TimeUtils.convert2Mill(timeStr)
@@ -48,7 +51,10 @@ class TimeUtils(object):
                 return result
         if "小时" in timeStr or "天" in timeStr or "分" in timeStr:
             return TimeUtils.convert2Mill(timeStr)
-        return TimeUtils.getNowMill()
+        if isAuto:
+            return TimeUtils.getNowMill()
+        else:
+            return None
 
 
     @classmethod
@@ -64,8 +70,10 @@ class TimeUtils(object):
         elif u"天" in timeStr:
             numberInt = numberInt*24*3600*1000
 
-        now = TimeUtils.getNowMill()
-        return now - numberInt
+        now = TimeUtils.getNowMill() - numberInt
+        if now < 0:
+            now = 0
+        return now
 
     @classmethod
     def getNowMill(cls):
@@ -98,6 +106,7 @@ class TimeUtils(object):
         link_list = re.findall(
             r"((\d{4}|\d{2})(\-|\/)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?", html)
         time_get = ''
+        timMill = None
         # print(link_list)
         if link_list != []:
             for t in link_list:
@@ -108,7 +117,7 @@ class TimeUtils(object):
                             if time_get.find(ele) == -1:
                                 time_get += ele
                         # print(time_get)
-                        time_get = TimeUtils.convert2Mill4Default(time_get, "")
+                        timMill = TimeUtils.convert2Mill4Default(time_get, "",True)
                     except OverflowError:
                         i = 0
                         while i < len(link_list):
@@ -118,7 +127,7 @@ class TimeUtils(object):
                                     time_get += ele
                             # print(time_get)
                             try:
-                                time_get = TimeUtils.convert2Mill4Default(time_get, "")
+                                timMill = TimeUtils.convert2Mill4Default(time_get, "",True)
                             except OverflowError:
                                 i = i + 1
                                 continue
@@ -132,10 +141,13 @@ class TimeUtils(object):
                                 time_get += ele
                         # print(time_get)
                         try:
-                            time_get = TimeUtils.convert2Mill4Default(time_get, "")
+                            timMill = TimeUtils.convert2Mill4Default(time_get, "",True)
                         except OverflowError:
                             i = i + 1
                             continue
                         break
-
-        return time_get
+        if timMill is None:
+            return TimeUtils.getNowMill()
+        if timMill < 0:
+            timMill = 0
+        return timMill

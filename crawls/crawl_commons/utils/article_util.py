@@ -26,7 +26,7 @@ class ArticleUtils(object):
     MERGE_FIELD = ["content","contentImages","contentFiles","contentSnapshot"]
     PAGE_CONTENT = [">上页<", ">上一页<", ">下页<", ">下一页<",">末页<",">尾页<",">首页<"]
     COMMON_NEXT_PAGE_REGEX = [WebRegex({"regexType":"xpath","regexField":"nextPage", "regexContent":'//a[contains(text(),"下一页") or contains(text(),"下页")]//@href',"resultFormat":"","pageRenderType":0,"renderSeconds":"0","renderType":"0","renderBrowser":"","regexSort":"0","depthNumber" :"0","resultFilterRegex":"","maxPageNumber":"0"})]
-
+    ERROR_PAGE_PATTERN = re.compile(u'404|服务器错误|页面找不到|页面没有找到')
     @classmethod
     def removeTag4Content(cls, str):
         if str is None:
@@ -99,6 +99,12 @@ class ArticleUtils(object):
         urlTmp = urlTmp.replace('\t', '')
         urlTmp = StringUtils.trim(urlTmp)
         return urljoin(referer,urlTmp)
+
+    @classmethod
+    def getSite(cls, url):
+        uparse = urlparse(url)
+        return uparse.netloc
+
 
     @classmethod
     def getResponseContents4WebRegex(cls, webRegexs, response):
@@ -190,7 +196,7 @@ class ArticleUtils(object):
             trimContent = ArticleUtils.removeAllTag(content)
             trimContent = StringUtils.trim(trimContent)
             if StringUtils.isNotEmpty(formatter):
-                formatContent = TimeUtils.convert2Mill4Default(trimContent,formatter)
+                formatContent = TimeUtils.convert2Mill4Default(trimContent,formatter,False)
             else:
                 formatContent = trimContent
         return formatContent
@@ -263,33 +269,7 @@ class ArticleUtils(object):
             fileDict[v] = fileInfo
         return fileDict
 
-    # @classmethod
-    # def getContentFiles(cls, response):
-    #     filesRegex = []
-    #     for postfix in ArticleUtils.FILE_POSTFIXS:
-    #         filesRegex.append('contains(@href,"%s")' % postfix)
-    #     postfixR = " or ".join(filesRegex)
-    #     links = response.xpath('//a[('+postfixR+') and text()]//@href').extract()
-    #     names = response.xpath('//a['+postfixR+']//text()').extract()
-    #     if len(links) <= 0:
-    #         return None
-    #     linkDict = {}
-    #     nameDict = {}
-    #     for i,link in enumerate(links):
-    #         if not ArticleUtils.isFile(link):
-    #             continue
-    #         linkDict[link] = ArticleUtils.getFullUrl(link,response.url)
-    #         if i < len(names):
-    #             name = ArticleUtils.removeAllTag(names[i])
-    #             nameDict[link] = name
-    #     fileDict = {}
-    #     for (k,v) in linkDict.items():
-    #         contentFileName = ""
-    #         if k in nameDict:
-    #             contentFileName = nameDict[k]
-    #         fileInfo = {"id":ArticleUtils.getArticleId(v),"name":contentFileName,"contentUrl":k,"url":v}
-    #         fileDict[v] = fileInfo
-    #     return fileDict
+
 
     @classmethod
     def isFile(cls, fileName):
@@ -298,6 +278,16 @@ class ArticleUtils(object):
         if ArticleUtils.FILE_PATTERN.match(fileName.lower()) is not None:
             return True
         return False
+
+    @classmethod
+    def isErrorTitle(cls, title):
+        if StringUtils.isEmpty(title):
+            return False
+        if ArticleUtils.ERROR_PAGE_PATTERN.match(title) is not None:
+            return True
+        return False
+
+
 
     @classmethod
     def meta2item(cls, meta,url):
@@ -341,6 +331,8 @@ class ArticleUtils(object):
             for nextUrl in nextUrls:
                 if StringUtils.isEmpty(nextUrl):
                     continue
+                if "javascript:" in nextUrl:
+                    continue
                 nextUrlTmp = nextUrl.replace('"',"")
                 nextUrlTmp = nextUrlTmp.replace("'","")
                 if StringUtils.isEmpty(nextUrlTmp):
@@ -348,11 +340,14 @@ class ArticleUtils(object):
                 if StringUtils.isNotEmpty(resultFilterRegex) and not re.match(resultFilterRegex, nextUrlTmp):
                     continue
                 targetUrl = ArticleUtils.getFullUrl(nextUrlTmp,response.url)
+
                 targetNextUrls.append(targetUrl)
         return targetNextUrls
 
     @classmethod
     def mergeDict(cls, detailDict, field,fieldValue):
+        if field is None or fieldValue is None:
+            return
         if field not in detailDict:
             detailDict[field] = fieldValue
         elif field in ArticleUtils.MERGE_FIELD:
@@ -368,6 +363,8 @@ class ArticleUtils(object):
 
     @classmethod
     def mergeNewDict(cls, detailDict, newDetailDict):
+        if newDetailDict is None:
+            return
         for (k,v) in newDetailDict.items():
             ArticleUtils.mergeDict(detailDict,k,v)
 
@@ -387,16 +384,16 @@ class ArticleUtils(object):
         return False
 
     @classmethod
-    def getAutoDetail(cls, contentPageNumber,response, enableDownloadImage=False, enableSnapshot=False):
+    def getAutoDetail(cls, contentPageNumber,html, enableDownloadImage=False, enableSnapshot=False):
         autoDetail = {}
         try:
-            html = "".join(response.xpath("//html").extract())
+
             doc = Document(html)
             # response.
             if contentPageNumber<=1:
                 autoDetail["title"] = doc.title()
-                autoDetail["publishAt"] = TimeUtils.get_conent_time(html)
-                autoDetail["html"] = html
+                # autoDetail["publishAt"] = TimeUtils.get_conent_time(html)
+                # autoDetail["html"] = html
             contentSnapshot = doc.summary()
             if StringUtils.isNotEmpty(ArticleUtils.removeAllTag(contentSnapshot)):
                 if enableSnapshot:
@@ -433,3 +430,17 @@ class ArticleUtils(object):
             url = ArticleUtils.getFullUrl(img, source_url)
             imageDict[url] = {"id": ArticleUtils.getArticleId(url), "contentUrl": img, "url": url}
         return imageDict
+
+    @classmethod
+    def isErrorPage(cls, detail):
+        if ArticleUtils.isFile(detail["url"]):
+            return False
+        if "content" not in detail:
+            return True
+        if "headTitle" not in detail:
+            return False
+        contentRemoveTag = ArticleUtils.removeAllTag(detail["content"])
+        if StringUtils.isEmpty(contentRemoveTag) and ("contentImages" not in detail or StringUtils.isEmpty(detail["contentImages"])) and ("contentFiles" not in detail or StringUtils.isEmpty(detail["contentFiles"])):
+            return True
+        headTitle = detail["headTitle"]
+        return ArticleUtils.isErrorTitle(headTitle)

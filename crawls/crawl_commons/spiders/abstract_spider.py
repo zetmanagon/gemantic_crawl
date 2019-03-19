@@ -180,11 +180,11 @@ class AbstractSpider(object):
         if "autoDetailData" in meta:
             autoDetailData = meta["autoDetailData"]
 
-        contentAutoDetailData = ArticleUtils.getAutoDetail(contentPageNumber, response, enableDownloadImage,enableSnapshot)
-
+        contentAutoData = None
+        html = "".join(response.xpath("//html").extract())
         meta["autoDetailData"] = autoDetailData
         maxPageNumber = 0
-        pageContent = None
+        pageContent = ""
         pageContentImages = None
         contentData = {}
         if enableDownloadFile:
@@ -204,13 +204,13 @@ class AbstractSpider(object):
                 continue
             contentData[k] = itemValue
             if "content" == k:
-                pageContent = itemValue
+                pageContent = ArticleUtils.removeAllTag(itemValue)
                 maxPageNumber = v[-1].maxPageNumber
-                if enableDownloadImage:
-                    images = ArticleUtils.getContentImages(v, response)
-                    if images is not None and len(images) > 0:
-                        contentData["contentImages"] = images
-                        pageContentImages = images
+                images = ArticleUtils.getContentImages(v, response)
+                if images is not None and len(images) > 0:
+                    contentData["contentImages"] = images
+                    pageContentImages = images
+
                         # ArticleUtils.mergeDict(detailData,"contentImages",images)
                 contentSnapshots = ArticleUtils.getResponseFieldValue("contentSnapshot", True, v, response)
                 if contentSnapshots is not None and len(contentSnapshots) > 0 and StringUtils.isNotEmpty(contentSnapshots[0]):
@@ -218,14 +218,14 @@ class AbstractSpider(object):
                         contentData["contentSnapshot"] = contentSnapshots[0]
                         # ArticleUtils.mergeDict(detailData,"contentSnapshot",contentSnapshots[0])
 
-        if pageContent is not None and pageContentImages is None and StringUtils.isEmpty(ArticleUtils.removeAllTag(pageContent)):
-            pageContent = None
-        if pageContent is None and "content" in contentAutoDetailData and StringUtils.isNotEmpty(contentAutoDetailData["content"]):
-            pageContent = ArticleUtils.removeAllTag(contentAutoDetailData["content"])
-            if StringUtils.isEmpty(pageContent):
-                pageContent = None
+        if StringUtils.isEmpty(pageContent):
+            if contentAutoData is None:
+                contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber, html, enableDownloadImage,enableSnapshot)
+            if "content" in contentAutoData:
+                pageContent = ArticleUtils.removeAllTag(contentAutoData["content"])
 
-        if pageContent is None and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
+
+        if StringUtils.isEmpty(pageContent) and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
             metaCopy = meta.copy()
             metaCopy["renderType"] = 1
             metaCopy["renderSeconds"] = 5
@@ -237,7 +237,14 @@ class AbstractSpider(object):
             # yield scrapy.Request(url=url, meta=metaCopy, callback=self.parseDetail, dont_filter=True)
         else:
             ArticleUtils.mergeNewDict(detailData, contentData)
-            ArticleUtils.mergeNewDict(autoDetailData, contentAutoDetailData)
+
+            if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData:
+                autoDetailData["publishAt"] = TimeUtils.get_conent_time(html)
+            if contentAutoData is None and ("title" not in detailData or StringUtils.isEmpty(pageContent)):
+                contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber,html, enableDownloadImage, enableSnapshot)
+            ArticleUtils.mergeNewDict(autoDetailData, contentAutoData)
+
+
             # with open(file="/home/yhye/tmp/crawl_data_policy/" + ArticleUtils.getArticleId(response.url) + ".html", mode='w') as f:
             #     f.write("".join(response.xpath("//html").extract()))
 
@@ -250,7 +257,8 @@ class AbstractSpider(object):
                 nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex, response)
                 if len(nextUrls) > 0 and StringUtils.isNotEmpty(nextUrls[0]):
                     targetNextUrl = nextUrls[0]
-            if StringUtils.isNotEmpty(targetNextUrl):
+            #防止死循环翻页
+            if StringUtils.isNotEmpty(targetNextUrl) and contentPageNumber <= 100:
                 meta["detailData"] = detailData
                 meta["autoDetailData"] = autoDetailData
                 meta["contentPageNumber"] = contentPageNumber + 1
@@ -279,8 +287,10 @@ class AbstractSpider(object):
                     elif k not in item or StringUtils.isEmpty(ArticleUtils.removeAllTag(str(item[k]))):
                         item[k] = v
 
+                item["headTitle"] = StringUtils.trim(ArticleUtils.removeAllTag("".join(response.xpath("//title//text()").extract())))
                 if "title" not in item or StringUtils.isEmpty(item["title"]):
-                    item["title"] = response.xpath("//title//text()")
+                    item["title"] = item["headTitle"]
+                item["html"] = html
                 yield item
 
     def do_closed(self,reason):
