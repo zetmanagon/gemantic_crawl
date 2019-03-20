@@ -1,3 +1,10 @@
+# @Date:   19-Mar-2019
+# @Email:  Tang@jeffery.top
+# @Filename: auto_spider.py
+# @Last modified time: 20-Mar-2019
+
+
+
 from readability import Document
 from newspaper import Article
 import scrapy
@@ -40,7 +47,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         link_list = self.get_list_urls(start_url, response)
         for url in link_list.keys():
             metaCopy = meta.copy()
-            metaCopy['anchorText'] = link_list[url]
+            metaCopy['anchorText'] = link_list[url][0]
+            metaCopy['anchorTime'] = link_list[url][1]
             metaCopy['parse'] = 'detail'
             if not ArticleUtils.isFile(url):
                 yield self.do_request(url=url, meta=metaCopy)
@@ -123,10 +131,12 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             detailData["title"] = meta['anchorText'].strip()
             if detailData["title"].find('...') != -1 or detailData["title"] == '':
                 detailData["title"] = doc.title()
-            detailData["publishAt"] = TimeUtils.get_conent_time(ArticleUtils.removeTag4Content(html))
+            detailData["publishAt"] = meta['anchorTime']
+            if detailData["publishAt"] == '':
+                 detailData["publishAt"] = TimeUtils.get_conent_time(ArticleUtils.removeTag4Content(html))
             if detailData["publishAt"] == '':
                 ts = time.strptime(meta["timestamp"], "%Y-%m-%d %H-%M-%S")
-                ts = str(int(time.mktime(ts)) * 1000)
+                ts = int(time.mktime(ts)) * 1000
                 detailData["publishAt"] = ts
             detailData["url"] = url
         content_snap = doc.summary()
@@ -195,135 +205,143 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         return final_urls
 
     def listFilter(self, href_parent, averageLength, averageWordCounts, only, max):
-        '''
-        列表筛选
-        @
-        @averageLength:阈值平均长度
-        @averageWordCounts：阈值平均字数
-        @only：是否只去一个列表页
-        @max:是否允许在没有符合要求数据时，取平均长度最长列表
-        @return：urls
-        '''
-        listList = []  # 列表的列表
-        fibbden = [10.375, 10.1875]  # 禁用的，重构后用静态
-        maxLength = 0
-        maxName = ''
-        for father_node in href_parent.keys():
-            urls = dict()
-            child_count = 0
-            child_total_length = 0
-            word_count = 0
-            print('------------------------')
-            for child_tag, text, length, href in href_parent[father_node]:
-                child_count += 1
-                child_total_length += len(text.strip())
-                word_count += len(" ".join(jieba.cut(text.strip())).split(" "))
-                # 链接描述平均字数和次数都大于阈值
-                print(text, '|', href)
-            # 记录max
-            if (child_total_length / child_count) > maxLength and child_count != 1 and (
-                    child_total_length / child_count) not in fibbden:
-                maxLength = child_total_length / child_count
-                maxName = father_node
-            print(father_node, child_count, child_total_length / child_count, word_count / child_count)
-            if child_total_length / child_count > averageLength and word_count / child_count > averageWordCounts and child_count > 1:
-                print("ture")
+            '''
+            列表筛选
+            @
+            @averageLength:阈值平均长度
+            @averageWordCounts：阈值平均字数
+            @only：是否只去一个列表页
+            @max:是否允许在没有符合要求数据时，取平均长度最长列表
+            @return：urls
+            '''
+            listList = []  # 列表的列表
+            fibbden =[10.375,10.1875] # 禁用的，重构后用静态
+            maxLength = 0
+            maxName = ''
+            for father_node in href_parent.keys():
+                urls = dict()
+                child_count = 0
+                child_total_length = 0
+                word_count = 0
+                print('------------------------')
+                for child_tag, text, length, href,_ in href_parent[father_node]:
+                    child_count += 1
+                    child_total_length += len(text.strip())
+                    word_count += len(" ".join(jieba.cut(text.strip())).split(" "))
+                    # 链接描述平均字数和次数都大于阈值
+                    print(text, '|', href)
+                # 记录max
+                if (child_total_length / child_count) > maxLength and child_count != 1 and (child_total_length / child_count) not in fibbden:
+                    maxLength = child_total_length / child_count
+                    maxName = father_node
+                print(father_node, child_count, child_total_length / child_count, word_count / child_count)
+                if child_total_length / child_count > averageLength and word_count / child_count > averageWordCounts and child_count > 1:
+                    print("ture")
 
-                for _, text, _, href in href_parent[father_node]:
-                    urls[href] = text
-                    print('------------------------')
-                listList.append(urls)
-        print('-------------------------------')
-        final_list = dict()
-        if max is True:
-            for _, text, _, href in href_parent[maxName]:
-                final_list[href] = text
-            return final_list
-        if only is True:
-            for l in listList:
-                if len(l) > len(final_list):
-                    final_list = l
-            return final_list
-        else:
-            for l in listList:
-                for u in l:
-                    final_list.update(u)
-            return final_list
+                    for _, text, _, href, time in href_parent[father_node]:
+                        urls[href] = [text,time]
+                        print('------------------------')
+                    listList.append(urls)
+            print('-------------------------------')
+            final_list = dict()
+            if max is True:
+                for _, text, _, href, time in href_parent[maxName]:
+                    final_list[href] = [text, time]
+                return final_list
+            if only is True:
+                for l in listList:
+                    if len(l) > len(final_list):
+                        final_list = l
+                return final_list
+            else:
+                for l in listList:
+                    for u in l:
+                        final_list.update(u)
+                return final_list
+
 
     def getSameParent(self, starturl, a_tags, fine):
-        '''
-        获取拥有统一父标签的链接字典
-        @a_tags：a标签
-        @fine:精细模式
-        @return：href_parent字典，（父节点名称：【urls】）
-        '''
-        href_parent = dict()
-        if fine is True:
-            i = 0
-            lastname = ''
-        for a_tag in a_tags:
-            # 抽取href，过滤掉无效链接
-            href = a_tag.xpath('@href').extract_first()
-            if href is None:
-                continue
+            '''
+            获取拥有统一父标签的链接字典
+            @a_tags：a标签
+            @fine:精细模式
+            @return：href_parent字典，（父节点名称：【urls】）
+            '''
+            href_parent = dict()
+            if fine is True:
+                i = 0
+                lastname = ''
+            for a_tag in a_tags:
+                # 抽取href，过滤掉无效链接
+                href = a_tag.xpath('@href').extract_first()
+                if href is None:
+                    continue
 
-            # 获取a标题文本内容，无内容的链接不抓取
-            text = a_tag.xpath('text()').extract_first()
-            if text is None:
-                continue
-            if len(text.strip()) == 0:
-                continue
+                # 获取a标题文本内容，无内容的链接不抓取
+                text = a_tag.xpath('text()').extract_first()
+                if text is None:
+                    continue
+                if len(text.strip()) == 0:
+                    continue
 
-            # 相对地址绝对化
-            if 'http' not in href:
-                href = urljoin(starturl, href)
+                # 相对地址绝对化
+                if 'http' not in href:
+                    href = urljoin(starturl, href)
 
-            # 获取父节点
-            treePath = ''
-            father_tag = a_tag.xpath('..')
-            while father_tag.xpath('local-name(.)').extract_first() is not None:
-                treePath = treePath + str(father_tag.xpath('local-name(.)').extract_first())
-                if (father_tag.xpath('@*') is not None):
-                    treePath = treePath + self.classExtract(father_tag.xpath('@*').extract_first())
-                father_tag = father_tag.xpath('..')
+                # 获取时间
+                timeInfo = a_tag.xpath('../text()|../span').extract()
+                time = ''
+                for t in timeInfo:
+                    time = time + t
+                time = TimeUtils.get_conent_time(time)
+                # print (time)
 
-            father_name = treePath
-            if father_name is not None:
-                father_name = '<' + father_name
-                for index, attribute in enumerate(father_tag.xpath('@*'), start=0):
-                    attribute_name = father_tag.xpath('name(@*[%d])' % index).extract_first()
-                    father_name += ' ' + attribute_name + "=" + attribute.extract()
-                father_name += '>'
-                if fine is True:
-                    if father_name not in href_parent:
-                        lastname = father_name
-                        href_parent[father_name] = [(a_tag, text, len(text), href)]
-                        print(father_name + ":" + href)
-                    elif father_name == lastname or lastname.endswith(father_name) == True:
-                        href_parent[lastname].append((a_tag, text, len(text), href))
-                        print(lastname + ":" + href)
+                # 获取父节点
+                treePath = ''
+                father_tag = a_tag.xpath('..')
+                while father_tag.xpath('local-name(.)').extract_first() is not None:
+                    treePath = treePath + str(father_tag.xpath('local-name(.)').extract_first())
+                    if(father_tag.xpath('@*') is not None):
+                        treePath = treePath + self.classExtract(father_tag.xpath('@*').extract_first())
+                    father_tag = father_tag.xpath('..')
+                    
+                father_name = treePath
+                if father_name is not None:
+                    father_name = '<' + father_name
+                    for index, attribute in enumerate(father_tag.xpath('@*'), start=0):
+                        attribute_name = father_tag.xpath('name(@*[%d])' % index).extract_first()
+                        father_name += ' ' + attribute_name + "=" + attribute.extract()
+                    father_name += '>'
+                    if fine is True:
+                        if father_name not in href_parent:
+                            lastname = father_name
+                            href_parent[father_name] = [(a_tag, text, len(text), href, time)]
+                            print(father_name+":"+href)
+                        elif father_name == lastname or lastname.endswith(father_name) == True:
+                            href_parent[lastname].append((a_tag, text, len(text), href, time))
+                            print(lastname+":"+href)
+                        else:
+                            father_name = str(i) + father_name
+                            i = i + 1
+                            href_parent[father_name] = [(a_tag, text, len(text), href, time)]
+                            print(father_name+":"+href)
+                            lastname = father_name
                     else:
-                        father_name = str(i) + father_name
-                        i = i + 1
-                        href_parent[father_name] = [(a_tag, text, len(text), href)]
-                        print(father_name + ":" + href)
-                        lastname = father_name
-                else:
-                    if father_name not in href_parent:
-                        href_parent[father_name] = [(a_tag, text, len(text), href)]
-                    else:
-                        href_parent[father_name].append((a_tag, text, len(text), href))
-        return href_parent
+                        if father_name not in href_parent:
+                            href_parent[father_name] = [(a_tag, text, len(text), href, time)]
+                        else:
+                            href_parent[father_name].append((a_tag, text, len(text), href, time))
+            return href_parent
 
-    def classExtract(self, xpath):
+    def classExtract(self , xpath):
         '''在这里加规则增加列表识别的适配性'''
         '''基金协会适配'''
-        if str(xpath).startswith('newsList'):
+        if str(xpath).startswith ('newsList'):
             return 'None'
         ''' 中国政府网适配 '''
         if str(xpath) == 'line':
             return 'None'
         return str(xpath)
 
-    def closed(self, reason):
+    def closed(self,reason):
         self.do_closed(reason)
