@@ -1,4 +1,5 @@
 *.log
+*.cfg
 *.temp
 /build
 build
@@ -8,5 +9,4 @@ __pycache__
 /project.egg-info
 project.egg-info
 *.exe
-*.cfg
 *.setting
