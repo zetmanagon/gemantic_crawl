@@ -14,6 +14,8 @@ from crawl_commons.utils.http_util import *
 import scrapy
 import logging
 import time
+from crawl_commons.monitor.template_monitor import TemplateComparator
+
 
 class AbstractSpider(object):
 
@@ -28,7 +30,7 @@ class AbstractSpider(object):
         self.crawlDB = CrawlRepository()
         self.crawlId = self.seedDB.get_crawl_id(self.crawlName)
         self.LOG.info("crawlId=%d crawlName=%s isHistory=%s" % (self.crawlId,self.crawlName,self.isHistory))
-
+        self.templateComparator = TemplateComparator(self.crawlDB)
 
     def do_start_requests(self):  # 由此方法通过下面链接爬取页面
         seeds_meta = self.get_seeds()
@@ -49,7 +51,8 @@ class AbstractSpider(object):
             if isRegex and (regex is None or len(regex)<=0):
                 self.LOG.infog("%s no regex" % seed.url)
                 continue
-            self.crawlDB.initCrawlStat(seed.url, timestamp)  # 初始化种子统计
+            if "auto_" not in self.crawlName and "test_" not in self.crawlName and not self.isHistory:
+                self.crawlDB.saveCrawlStat(seed.url,self.crawlId,self.crawlName, timestamp,"detail")  # 初始化种子统计
             meta = {}
             meta["timestamp"] = timestamp
             meta["seedRegex"] = regex
@@ -66,10 +69,14 @@ class AbstractSpider(object):
 
     def do_parse_list_regex(self, response):
         meta = response.meta
+        pageNumber = meta["pageNumber"]
         regexList = meta["seedRegex"]
         seed = meta["seedInfo"]
         depthNumber = int(meta["depthNumber"])
         regexDict = regexList[depthNumber].regexDict
+        if pageNumber <=1 and "auto_" not in self.crawlName and "test_" not in self.crawlName and not self.isHistory:
+            html = "".join(response.xpath("//html").extract())
+            self.crawlDB.saveCrawlStat(seed.url,self.crawlId,self.crawlName, meta["timestamp"], "list",html,depthNumber)
         if "list" not in regexDict:
             self.log("%s no list regex" % response.url)
             yield
@@ -128,7 +135,7 @@ class AbstractSpider(object):
                 # yield scrapy.Request(url=targetUrl, meta=metaCopy, callback=self.parse)
                 yield self.do_request(url=targetUrl, meta=metaCopy,cleanup=True)
 
-        pageNumber = meta["pageNumber"]
+
         maxPageNumber = 0
         nextPageRegex = []
         if "nextPage" in regexDict:
@@ -263,7 +270,7 @@ class AbstractSpider(object):
                 meta["autoDetailData"] = autoDetailData
                 meta["contentPageNumber"] = contentPageNumber + 1
                 self.LOG.info("detail nextPage %s %s" % (str(contentPageNumber + 1), targetNextUrl))
-                yield self.do_request(url=url, meta=meta,dont_filter=True,cleanup=True)
+                yield self.do_request(url=url, meta=meta,dont_filter=False,cleanup=True)
                 # yield scrapy.Request(url=targetNextUrl, meta=meta, callback=self.parseDetail)
             else:
                 item = ArticleUtils.meta2item(meta, detailData["url"])
@@ -298,4 +305,7 @@ class AbstractSpider(object):
         self.LOG.info(reason)
         if self.crawlId > 0:
             self.seedDB.stat_seed(self.crawlId)
+            if "auto_" not in self.crawlName and "test_" not in self.crawlName and not self.isHistory:
+                self.templateComparator.run_task(self.crawlId)
+
         self.LOG.info("%s %s stat seeds finished" % (self.crawlId,self.name))
