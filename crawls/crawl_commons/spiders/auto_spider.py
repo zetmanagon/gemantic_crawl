@@ -1,7 +1,7 @@
 # @Date:   19-Mar-2019
 # @Email:  Tang@jeffery.top
 # @Filename: auto_spider.py
-# @Last modified time: 20-Mar-2019
+# @Last modified time: 22-Mar-2019
 
 
 
@@ -28,7 +28,7 @@ from crawl_commons.utils.time_util import *
 
 class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
     name = "auto_spider"  # 定义蜘蛛名
-
+    restrictNewspaper = ['http://bxjg.circ.gov.cn/web/site0/tab5241/']
     def __init__(self, name=None, **kwargs):
         scrapy.Spider.__init__(self, name=name, kwargs=kwargs)
         AbstractSpider.__init__(self, self.name)
@@ -44,6 +44,9 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         # 起始页面url抽取'''
         meta = response.meta
         start_url = meta["seedInfo"].url
+        meta['newspaper'] = False
+        if start_url in self.restrictNewspaper:
+            meta['newspaper'] = True
         link_list = self.get_list_urls(start_url, response)
         for url in link_list.keys():
             metaCopy = meta.copy()
@@ -141,7 +144,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             detailData["url"] = url
         content_snap = doc.summary()
         useNewspapaer = False  # 是否使用了newspaper
-        if len(ArticleUtils.removeTag4Content(content_snap).strip()) < 3:
+        if len(ArticleUtils.removeTag4Content(content_snap).strip()) < 3 or meta['newspaper'] :
             article = Article(response.url, language='zh', keep_article_html=True, fetch_images=False)
             article.download(input_html=response.text)
             article.parse()
