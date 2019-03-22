@@ -52,7 +52,7 @@ class TimeUtils(object):
         if "小时" in timeStr or "天" in timeStr or "分" in timeStr:
             return TimeUtils.convert2Mill(timeStr)
         if isAuto:
-            return TimeUtils.getNowMill()
+            return 0
         else:
             return None
 
@@ -147,7 +147,7 @@ class TimeUtils(object):
                             continue
                         break
         if timMill is None:
-            return TimeUtils.getNowMill()
+            return 0
         if timMill < 0:
             timMill = 0
         return timMill

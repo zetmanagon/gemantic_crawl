@@ -301,6 +301,7 @@ class ArticleUtils(object):
         listData = {}
         if "listData" in meta:
             listData = meta["listData"]
+        item["parse"] =  "detail"
         item["category"] = seed.category
         item["urlLabel"] = seed.urlLabel.split(",")
         item["crawlName"] = seed.crawlName
