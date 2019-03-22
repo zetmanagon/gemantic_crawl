@@ -1,7 +1,7 @@
 # @Date:   12-Mar-2019
 # @Email:  Tang@jeffery.top
 # @Filename: abstract_spider.py
-# @Last modified time: 21-Mar-2019
+# @Last modified time: 22-Mar-2019
 
 
 
@@ -43,7 +43,7 @@ class AbstractSpider(object):
         timestamp = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))  # 该次爬虫的时间戳
         # 定义爬取的链接
         for seed in seeds:
-            # if seed.url != 'http://www.sse.com.cn/lawandrules/rules/law/adminis/':
+            # if seed.url != 'http://www.mohurd.gov.cn/jsbfld/index.html':
             #     continue
             regex = self.seedDB.get_regex(seed.regexName)
             if isRegex and (regex is None or len(regex)<=0):

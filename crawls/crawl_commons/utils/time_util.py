@@ -1,3 +1,10 @@
+# @Date:   19-Mar-2019
+# @Email:  Tang@jeffery.top
+# @Filename: time_util.py
+# @Last modified time: 22-Mar-2019
+
+
+
 # -*- coding: utf-8 -*-
 
 import time
@@ -104,7 +111,7 @@ class TimeUtils(object):
         @return 时间戳
         '''
         link_list = re.findall(
-            r"((\d{4}|\d{2})(\-|\/)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?", html)
+            r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?", html)
         time_get = ''
         timMill = None
         # print(link_list)

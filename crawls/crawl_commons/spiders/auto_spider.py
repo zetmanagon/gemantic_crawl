@@ -292,10 +292,15 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                     href = urljoin(starturl, href)
 
                 # 获取时间
-                timeInfo = a_tag.xpath('../text()|../span').extract()
+                if starturl.find('mohurd') > 0:
+                    timeInfo = a_tag.xpath('../../.').extract()
+                else:
+                    timeInfo = a_tag.xpath('../text()|../span').extract()
                 time = ''
                 for t in timeInfo:
                     time = time + t
+                # print(time)
+                # print('*'*20)
                 time = TimeUtils.get_conent_time(time)
                 # print (time)
 
