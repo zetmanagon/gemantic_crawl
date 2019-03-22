@@ -25,14 +25,16 @@ class CrawlRepository:
         self.db = self.client[settings.get('MONGO_DB')]
         self.logger = logging.getLogger("crawlRepository")
         self.downloadDB = FileDownloadRepository()
-        self.crawlDetail = "crawlDetail"
-        self.crawl = "crawl"
-        self.crawlSnapshot = "crawlSnapshot"
-        self.crawlStat = "crawlStat"
-        self.crawlDetailTest = "crawlDetailTest"
-        self.crawlSnapshotTest = "crawlSnapshotTest"
-        self.crawlStatTest = "crawlStatTest"
-        self.crawlTest = "crawlTest"
+        self.crawlDetail = self.db.get_collection("crawlDetail")
+        self.crawl = self.db.get_collection("crawl")
+        self.crawlSnapshot = self.db.get_collection("crawlSnapshot")
+        self.crawlDetailTest = self.db.get_collection("crawlDetailTest")
+        self.crawlSnapshotTest = self.db.get_collection("crawlSnapshotTest")
+        self.crawlTest = self.db.get_collection("crawlTest")
+        self.crawlStat = self.db.get_collection("crawlStat")
+        self.baseline = self.db.get_collection("baseline")
+        self.comparison = self.db.get_collection("comparisonResult")
+
         # self.downloadFiles = "downloadFiles"
 
     def saveCrawlDetail(self,item):
@@ -48,6 +50,7 @@ class CrawlRepository:
             return
         if "headTitle" in detail:
             detail.pop("headTitle")
+        detail.pop("parse")
         isTest = False
         if "test_" in detail["crawlName"]:
             isTest = True
@@ -59,15 +62,15 @@ class CrawlRepository:
             if "contentSnapshot" in detail:
                 snapshotDetail = {"_id":id,"content":detail["contentSnapshot"],"url":detail["url"],"updateAt":now}
                 if isTest:
-                    self.db[self.crawlSnapshotTest].save(snapshotDetail)
+                    self.crawlSnapshotTest.save(snapshotDetail)
                 else:
-                    self.db[self.crawlSnapshot].save(snapshotDetail)
+                    self.crawlSnapshot.save(snapshotDetail)
 
                 detail.pop("contentSnapshot")
             if isTest:
-                self.db[self.crawlDetailTest].save(detail)
+                self.crawlDetailTest.save(detail)
             else:
-                self.db[self.crawlDetail].save(detail)
+                self.crawlDetail.save(detail)
 
             self.logger.info("save %s %s" % (item["url"], id))
             urls = []
@@ -85,20 +88,20 @@ class CrawlRepository:
                 self.downloadDB.download(urls,str(detail["publishAt"]))
             detail.pop("content")
             if isTest:
-                self.db[self.crawlTest].save(detail)
+                self.crawlTest.save(detail)
             else:
-                self.db[self.crawl].save(detail)
+                self.crawl.save(detail)
             # files = ArticleUtils.getDownloadFile(urls,detail["publishAt"])
             # for file in files:
             #     self.db[self.downloadFiles].save(file)
         elif ArticleUtils.isFile(detail["url"]):
             detail["fileType"] = "file"
             if isTest:
-                self.db[self.crawlDetail].save(detail)
-                self.db[self.crawl].save(detail)
+                self.crawlDetailTest.save(detail)
+                self.crawlTest.save(detail)
             else:
-                self.db[self.crawlDetail].save(detail)
-                self.db[self.crawl].save(detail)
+                self.crawlDetail.save(detail)
+                self.crawl.save(detail)
             if "publishAt" in detail:
                 self.downloadDB.download([detail["url"]],str(detail["publishAt"]))
             # files = ArticleUtils.getDownloadFile([detail["url"]],detail["publishAt"])
@@ -113,11 +116,13 @@ class CrawlRepository:
         item = ArticleUtils.meta2item(meta,url)
         self.saveCrawlDetail(item)
 
-    def saveCrawlStat(self, item):
+    def updateCrawlStat(self, item):
         if "content" not in item:
             return
-        content = ArticleUtils.removeAllTag(item["content"])
         url = item["url"]
+        if ArticleUtils.isFile(url):
+            return
+        content = ArticleUtils.removeAllTag(item["content"])
         referer = item["referer"]
         urlSite = ArticleUtils.getSite(url)
         if urlSite not in referer:
@@ -125,18 +130,42 @@ class CrawlRepository:
         postiveItem = 0  # 标示爬取是否成功（content是否有内容）
         if StringUtils.isNotEmpty(content):
             postiveItem = 1
-        condition = {'seed': referer, 'time': item["timestamp"]}
-        count = self.db[self.crawlStat].find_one(condition)  # 查询是否存在记录
-        if count is None:
-            self.db[self.crawlStat].save({'seed': referer, "time": item["timestamp"], "all": 1, "success": postiveItem,
-                                "html": item['html']})
-        else:
-            if len(item['html']) > len(count['html']):
-                count['html'] = item['html']
-            count['all'] += 1
-            count['success'] += postiveItem
-            self.db[self.crawlStat].update(condition, count)
+        timestamp = item["timestamp"]
+        parse = item["parse"]
+        # condition = {'seed': referer, 'time': item["timestamp"]}
+        id =  ArticleUtils.getArticleId(referer+"_"+parse+"_0_"+str(item["crawlId"]))
+        oldCs = self.crawlStat.find_one({'_id':id})
+        html = oldCs["html"]
+        if len(item['html']) > len(oldCs['html']):
+            html = item['html']
+        self.crawlStat.find_one_and_update({'_id':id}, {'$inc': {'all': 1,'success': postiveItem}, '$set': {'time': timestamp,"html": html}})
 
-    def initCrawlStat(self, url, timestamp):
-        self.db[self.crawlStat].save({'seed': url, "time": timestamp, "all": 0, "success": 0,
-                                "html": ''})
+    def saveCrawlStat(self, url,crawlId,crawlName, timestamp,parse="detail",html="",depthNumber=0):
+        id = ArticleUtils.getArticleId(url+"_"+parse+"_"+str(depthNumber)+"_"+str(crawlId))
+        html = html
+        if depthNumber >=1:
+            oldCs = self.crawlStat.find_one({'_id':id})
+            if oldCs is not None and "html" in oldCs:
+                if len(oldCs['html']) > len(html):
+                    html = oldCs['html']
+        self.crawlStat.save({'_id':id,'seed': url, 'crawlId':crawlId,'crawlName':crawlName,"time": timestamp, "all": 0,"depthNumber":depthNumber, "success": 0,
+                                "html": html,"parse":parse})
+
+
+    def get_crawl_stat(self,crawlId,parse="detail",depthNumber=0):
+
+        return self.crawlStat.find({"parse": parse,"depthNumber":depthNumber,"crawlId":crawlId})
+
+
+    def save_compare_result(self,compare_result):
+        compare_result['updateAt'] = TimeUtils.getNowMill()
+        self.comparison.save(compare_result)
+
+
+
+    def get_baseline(self,id):
+        return self.baseline.find_one({"_id":id})
+
+    def save_baseline(self, baseline):
+        baseline['updateAt'] = TimeUtils.getNowMill()
+        self.baseline.save(baseline)

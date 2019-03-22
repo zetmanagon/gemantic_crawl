@@ -35,4 +35,5 @@ class CrawlResultItem(scrapy.Item):
     contentFiles = scrapy.Field()
     contentSnapshot = scrapy.Field()
     timestamp = scrapy.Field()
+    parse = scrapy.Field()
     html = scrapy.Field()
