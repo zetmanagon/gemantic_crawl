@@ -105,6 +105,23 @@ class ArticleUtils(object):
         uparse = urlparse(url)
         return uparse.netloc
 
+    @classmethod
+    def getDomain(cls, url):
+        site = ArticleUtils.getSite(url)
+        print(site)
+        siteArr = site.split(".")
+        print(len(siteArr))
+        if len(siteArr)<= 3:
+            return site
+        return ".".join(siteArr[-3:])
+
+    @classmethod
+    def isSameSite(cls,referer,url):
+        site = ArticleUtils.getSite(url)
+        domain = ArticleUtils.getDomain(referer)
+        if domain == 'sousuo.gov.cn' and site == 'www.gov.cn':
+            return True
+        return domain in site
 
     @classmethod
     def getResponseContents4WebRegex(cls, webRegexs, response):

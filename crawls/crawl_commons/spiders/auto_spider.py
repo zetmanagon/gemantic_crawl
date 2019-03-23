@@ -43,6 +43,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             meta['newspaper'] = True
         link_list = self.get_list_urls(start_url, response)
         for url in link_list.keys():
+            if not ArticleUtils.isSameSite(start_url,url):
+                continue
             metaCopy = meta.copy()
             metaCopy['anchorText'] = link_list[url][0]
             metaCopy['anchorTime'] = link_list[url][1]
