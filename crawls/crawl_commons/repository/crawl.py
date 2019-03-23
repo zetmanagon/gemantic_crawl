@@ -131,8 +131,7 @@ class CrawlRepository:
             return
         content = ArticleUtils.removeAllTag(item["content"])
         referer = item["referer"]
-        urlSite = ArticleUtils.getSite(url)
-        if urlSite not in referer:
+        if not ArticleUtils.isSameSite(referer,url):
             return
         postiveItem = 0  # 标示爬取是否成功（content是否有内容）
         if StringUtils.isNotEmpty(content):
