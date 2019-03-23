@@ -12,6 +12,9 @@ from crawl_commons.utils.annotation import *
 from crawl_commons.utils.article_util import *
 from crawl_commons.utils.string_util import *
 from crawl_commons.repository.filedownload import *
+from crawl_commons.repository.crawl_offline import *
+
+
 
 import logging
 
@@ -25,6 +28,7 @@ class CrawlRepository:
         self.db = self.client[settings.get('MONGO_DB')]
         self.logger = logging.getLogger("crawlRepository")
         self.downloadDB = FileDownloadRepository()
+        self.offlineDB = CrawlOfflineRepository()
         self.crawlDetail = self.db.get_collection("crawlDetail")
         self.crawl = self.db.get_collection("crawl")
         self.crawlSnapshot = self.db.get_collection("crawlSnapshot")
@@ -48,17 +52,34 @@ class CrawlRepository:
         if isErrorPage:
             self.logger.info("errorPage %s %s" % (detail["url"], id))
             return
+
+        detail.pop("parse")
+        crawlName = detail["crawlName"]
         if "headTitle" in detail:
             detail.pop("headTitle")
-        detail.pop("parse")
-        isTest = False
-        if "test_" in detail["crawlName"]:
-            isTest = True
-        if "html" in detail:
-            detail.pop("html")
         if "timestamp" in detail:
             detail.pop("timestamp")
-        if "content" in detail and StringUtils.isNotEmpty(detail["content"]):
+        isFile = ArticleUtils.isFile(detail["url"])
+        isTest = not ArticleUtils.isNotTest(crawlName)
+        if "html" in detail:
+            if not isTest and not isFile:
+                self.offlineDB.saveCrawlHtml(detail)
+            detail.pop("html")
+        if isFile:
+            detail["fileType"] = "file"
+            if isTest:
+                self.crawlDetailTest.save(detail)
+                self.crawlTest.save(detail)
+            else:
+                self.crawlDetail.save(detail)
+                self.crawl.save(detail)
+            if "publishAt" in detail:
+                self.downloadDB.download([detail["url"]], str(detail["publishAt"]))
+            # files = ArticleUtils.getDownloadFile([detail["url"]],detail["publishAt"])
+            # for file in files:
+            #     self.db[self.downloadFiles].save(file)
+            self.logger.info("save file %s %s" % (item["url"], id))
+        elif "content" in detail and StringUtils.isNotEmpty(detail["content"]):
             if "contentSnapshot" in detail:
                 snapshotDetail = {"_id":id,"content":detail["contentSnapshot"],"url":detail["url"],"updateAt":now}
                 if isTest:
@@ -94,20 +115,6 @@ class CrawlRepository:
             # files = ArticleUtils.getDownloadFile(urls,detail["publishAt"])
             # for file in files:
             #     self.db[self.downloadFiles].save(file)
-        elif ArticleUtils.isFile(detail["url"]):
-            detail["fileType"] = "file"
-            if isTest:
-                self.crawlDetailTest.save(detail)
-                self.crawlTest.save(detail)
-            else:
-                self.crawlDetail.save(detail)
-                self.crawl.save(detail)
-            if "publishAt" in detail:
-                self.downloadDB.download([detail["url"]],str(detail["publishAt"]))
-            # files = ArticleUtils.getDownloadFile([detail["url"]],detail["publishAt"])
-            # for file in files:
-            #     self.db[self.downloadFiles].save(file)
-            self.logger.info("save file %s %s" % (item["url"], id))
         else :
             self.logger.info("no content %s" % (item["url"]))
 
