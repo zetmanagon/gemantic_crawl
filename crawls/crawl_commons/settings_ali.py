@@ -18,6 +18,9 @@ NEWSPIDER_MODULE = 'crawl_selected.spiders'
 MONGO_URI = 'mongodb://crawl:crawl2get@mongo-semantic-1:27017,mongo-semantic-2:27017/crawl'
 MONGO_DB = 'crawl'
 
+MONGO_OFFLINE_URI = 'mongodb://crawl:crawl2get@mongo-semantic-1:27017,mongo-semantic-2:27017/crawl'
+MONGO_OFFLINE_DB = 'crawl'
+
 # MYSQL_IP = '10.0.0.20'
 # MYSQL_PORT = 3307
 # MYSQL_DB = "information"

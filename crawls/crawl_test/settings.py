@@ -22,10 +22,16 @@ SPIDER_MODULES = ['crawl_test.spiders']
 NEWSPIDER_MODULE = 'crawl_test.spiders'
 
 #######数据库配置######################################
-# MONGO_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
-# MONGO_DB = 'test_yyh'
-MONGO_URI = 'localhost:27017'
-MONGO_DB = 'tzh_test'
+# MONGO_URI = 'localhost:27017'
+# MONGO_DB = 'tzh_test'
+
+MONGO_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
+MONGO_DB = 'test_yyh'
+
+
+MONGO_OFFLINE_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
+MONGO_OFFLINE_DB = 'test_yyh'
+
 #######种子获取配置#########################################
 
 CRAWL_IP = "10.0.0.36"

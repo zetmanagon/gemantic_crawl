@@ -392,7 +392,7 @@ class ArticleUtils(object):
             doc = Document(html)
             # response.
             if contentPageNumber<=1:
-                autoDetail["title"] = doc.title()
+                autoDetail["title"] = ArticleUtils.cleanHeadTitle(doc.title())
                 # autoDetail["publishAt"] = TimeUtils.get_conent_time(html)
                 # autoDetail["html"] = html
             contentSnapshot = doc.summary()
@@ -445,3 +445,24 @@ class ArticleUtils(object):
             return True
         headTitle = detail["headTitle"]
         return ArticleUtils.isErrorTitle(headTitle)
+
+    @classmethod
+    def isHistory(cls, spiderName):
+        return spiderName.startswith("history_")
+
+    @classmethod
+    def isStat(cls, spiderName):
+        return "auto_" not in spiderName and "test_" not in spiderName and not ArticleUtils.isHistory(spiderName)
+
+    @classmethod
+    def isNotTest(cls, spiderName):
+        return "test_" not in spiderName
+
+    @classmethod
+    def cleanHeadTitle(cls, headTitle):
+        if "_" in headTitle and len(StringUtils.trim(headTitle.split("_")[0])) >= 5:
+            return StringUtils.trim(headTitle.split("_")[0])
+        if "--" in headTitle and len(StringUtils.trim(headTitle.split("--")[0])) >=5:
+            return StringUtils.trim(headTitle.split("--")[0])
+        return headTitle
+

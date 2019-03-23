@@ -21,10 +21,10 @@ class AbstractSpider(object):
 
     def __init__(self,crawl_name):
         self.LOG = logging.getLogger("abstractSpider")
+        self.spiderName = crawl_name
         self.crawlName = crawl_name.replace("history_", "")
-        self.isHistory = False
-        if crawl_name.startswith("history_"):
-            self.isHistory = True
+        self.isHistory = ArticleUtils.isHistory(self.spiderName)
+        self.isStat = ArticleUtils.isStat(self.spiderName)
         self.crawlId = 0
         self.seedDB = SeedRepository()
         self.crawlDB = CrawlRepository()
@@ -51,7 +51,7 @@ class AbstractSpider(object):
             if isRegex and (regex is None or len(regex)<=0):
                 self.LOG.infog("%s no regex" % seed.url)
                 continue
-            if "auto_" not in self.crawlName and "test_" not in self.crawlName and not self.isHistory:
+            if self.isStat:
                 self.crawlDB.saveCrawlStat(seed.url,self.crawlId,self.crawlName, timestamp,"detail")  # 初始化种子统计
             meta = {}
             meta["timestamp"] = timestamp
@@ -74,7 +74,7 @@ class AbstractSpider(object):
         seed = meta["seedInfo"]
         depthNumber = int(meta["depthNumber"])
         regexDict = regexList[depthNumber].regexDict
-        if pageNumber <=1 and "auto_" not in self.crawlName and "test_" not in self.crawlName and not self.isHistory:
+        if pageNumber <=1 and self.isStat:
             html = "".join(response.xpath("//html").extract())
             self.crawlDB.saveCrawlStat(seed.url,self.crawlId,self.crawlName, meta["timestamp"], "list",html,depthNumber)
         if "list" not in regexDict:
@@ -296,7 +296,7 @@ class AbstractSpider(object):
 
                 item["headTitle"] = StringUtils.trim(ArticleUtils.removeAllTag("".join(response.xpath("//title//text()").extract())))
                 if "title" not in item or StringUtils.isEmpty(item["title"]):
-                    item["title"] = item["headTitle"]
+                    item["title"] = ArticleUtils.cleanHeadTitle(item["headTitle"])
                 item["html"] = html
                 yield item
 

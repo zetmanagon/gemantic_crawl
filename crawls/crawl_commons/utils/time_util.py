@@ -79,22 +79,7 @@ class TimeUtils(object):
     def getNowMill(cls):
         return int(time.time()*1000)
 
-    # @classmethod
-    # def get_conent_time(cls, html):
-    #     '''
-    #     提取时间,并转化为时间戳
-    #     @param response
-    #     @return 时间戳
-    #     '''
-    #     link_list =re.findall(r"((\d{4}|\d{2})(\-|\/)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?" ,html)
-    #     time_get = ''
-    #     if link_list != []:
-    #         time_get = link_list[0][0]
-    #         for ele in link_list[0]:
-    #             if time_get.find(ele) == -1:
-    #                 time_get += ele
-    #         time_get = TimeUtils.convert2Mill4Default(time_get,"")
-    #     return time_get
+
 
     @classmethod
     def get_conent_time(cls, html):
@@ -104,8 +89,8 @@ class TimeUtils(object):
         @return 时间戳
         '''
         link_list = re.findall(
-            r"((\d{4}|\d{2})(\-|\/)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?", html)
-        time_get = ''
+            r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",
+            html)
         timMill = None
         # print(link_list)
         if link_list != []:
@@ -117,7 +102,7 @@ class TimeUtils(object):
                             if time_get.find(ele) == -1:
                                 time_get += ele
                         # print(time_get)
-                        timMill = TimeUtils.convert2Mill4Default(time_get, "",True)
+                        timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
                     except OverflowError:
                         i = 0
                         while i < len(link_list):
@@ -127,7 +112,7 @@ class TimeUtils(object):
                                     time_get += ele
                             # print(time_get)
                             try:
-                                timMill = TimeUtils.convert2Mill4Default(time_get, "",True)
+                                timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
                             except OverflowError:
                                 i = i + 1
                                 continue
@@ -141,7 +126,7 @@ class TimeUtils(object):
                                 time_get += ele
                         # print(time_get)
                         try:
-                            timMill = TimeUtils.convert2Mill4Default(time_get, "",True)
+                            timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
                         except OverflowError:
                             i = i + 1
                             continue

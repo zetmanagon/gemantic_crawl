@@ -18,6 +18,9 @@ NEWSPIDER_MODULE = 'crawl_selected.spiders'
 MONGO_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
 MONGO_DB = 'test_yyh'
 
+MONGO_OFFLINE_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
+MONGO_OFFLINE_DB = 'test_yyh'
+
 #######种子获取配置#########################################
 CRAWL_IP = "10.0.0.36"
 
