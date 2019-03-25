@@ -10,3 +10,4 @@ __pycache__
 project.egg-info
 *.exe
 *.setting
+test.py
