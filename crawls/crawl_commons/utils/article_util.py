@@ -27,6 +27,8 @@ class ArticleUtils(object):
     PAGE_CONTENT = [">上页<", ">上一页<", ">下页<", ">下一页<",">末页<",">尾页<",">首页<"]
     COMMON_NEXT_PAGE_REGEX = [WebRegex({"regexType":"xpath","regexField":"nextPage", "regexContent":'//a[contains(text(),"下一页") or contains(text(),"下页")]//@href',"resultFormat":"","pageRenderType":0,"renderSeconds":"0","renderType":"0","renderBrowser":"","regexSort":"0","depthNumber" :"0","resultFilterRegex":"","maxPageNumber":"0"})]
     ERROR_PAGE_PATTERN = re.compile(u'.*?(404|服务器错误|页面找不到|页面没有找到|no-title).*')
+    ERROR_PAGE_TITLE_PATTERN = re.compile(u'.*?(首页|末页|上一页|下一页|上页|下页|尾页).*')
+
     ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|BadGateway|BadRequest|ErrorPage).*')
 
     @classmethod
@@ -304,7 +306,7 @@ class ArticleUtils(object):
             return False
         if ArticleUtils.ERROR_PAGE_PATTERN.match(title) is not None:
             return True
-        if "首页" in title and len(title)<10:
+        if ArticleUtils.ERROR_PAGE_TITLE_PATTERN.match(title) is not None and len(title)<10:
             return True
         return False
 
