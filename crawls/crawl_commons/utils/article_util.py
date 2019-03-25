@@ -474,6 +474,11 @@ class ArticleUtils(object):
             headTitle = detail["headTitle"]
             if ArticleUtils.isErrorTitle(headTitle):
                 return True
+        if "title" not in detail:
+            return True
+        title = detail["title"]
+        if ArticleUtils.isErrorTitle(title):
+            return True
         if ArticleUtils.isErrorContent(detail["content"]):
             return True
         return False
