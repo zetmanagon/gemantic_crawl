@@ -304,6 +304,8 @@ class ArticleUtils(object):
             return False
         if ArticleUtils.ERROR_PAGE_PATTERN.match(title) is not None:
             return True
+        if "首页" in title and len(title)<10:
+            return True
         return False
 
     @classmethod
