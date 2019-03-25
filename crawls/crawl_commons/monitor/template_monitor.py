@@ -4,8 +4,9 @@ from crawl_commons.utils.string_util import *
 from html_similarity import style_similarity
 from html_similarity import structural_similarity
 from crawl_commons.repository.crawl import *
-
+from crawl_commons.utils.annotation import *
 import logging
+
 
 class TemplateComparator(object):
 

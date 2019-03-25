@@ -26,7 +26,9 @@ class ArticleUtils(object):
     MERGE_FIELD = ["content","contentImages","contentFiles","contentSnapshot"]
     PAGE_CONTENT = [">上页<", ">上一页<", ">下页<", ">下一页<",">末页<",">尾页<",">首页<"]
     COMMON_NEXT_PAGE_REGEX = [WebRegex({"regexType":"xpath","regexField":"nextPage", "regexContent":'//a[contains(text(),"下一页") or contains(text(),"下页")]//@href',"resultFormat":"","pageRenderType":0,"renderSeconds":"0","renderType":"0","renderBrowser":"","regexSort":"0","depthNumber" :"0","resultFilterRegex":"","maxPageNumber":"0"})]
-    ERROR_PAGE_PATTERN = re.compile(u'404|服务器错误|页面找不到|页面没有找到')
+    ERROR_PAGE_PATTERN = re.compile(u'.*?(404|服务器错误|页面找不到|页面没有找到|no-title).*')
+    ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|BadGateway|BadRequest|ErrorPage).*')
+
     @classmethod
     def removeTag4Content(cls, str):
         if str is None:
@@ -105,6 +107,23 @@ class ArticleUtils(object):
         uparse = urlparse(url)
         return uparse.netloc
 
+    @classmethod
+    def getDomain(cls, url):
+        site = ArticleUtils.getSite(url)
+        print(site)
+        siteArr = site.split(".")
+        print(len(siteArr))
+        if len(siteArr)<= 3:
+            return site
+        return ".".join(siteArr[-3:])
+
+    @classmethod
+    def isSameSite(cls,referer,url):
+        site = ArticleUtils.getSite(url)
+        domain = ArticleUtils.getDomain(referer)
+        if domain == 'sousuo.gov.cn' and site == 'www.gov.cn':
+            return True
+        return domain in site
 
     @classmethod
     def getResponseContents4WebRegex(cls, webRegexs, response):
@@ -287,7 +306,13 @@ class ArticleUtils(object):
             return True
         return False
 
-
+    @classmethod
+    def isErrorContent(cls,content):
+        contentRemoveTag = StringUtils.trim(ArticleUtils.removeAllTag(content))
+        contentRemoveTag = contentRemoveTag.replace(" ","")
+        if ArticleUtils.ERROR_PAGE_CONTENT_PATTERN.match(contentRemoveTag) is not None and len(contentRemoveTag) < 1000:
+            return True
+        return False
 
     @classmethod
     def meta2item(cls, meta,url):
@@ -392,7 +417,7 @@ class ArticleUtils(object):
             doc = Document(html)
             # response.
             if contentPageNumber<=1:
-                autoDetail["title"] = doc.title()
+                autoDetail["title"] = ArticleUtils.cleanHeadTitle(doc.title())
                 # autoDetail["publishAt"] = TimeUtils.get_conent_time(html)
                 # autoDetail["html"] = html
             contentSnapshot = doc.summary()
@@ -438,10 +463,34 @@ class ArticleUtils(object):
             return False
         if "content" not in detail:
             return True
-        if "headTitle" not in detail:
-            return False
         contentRemoveTag = ArticleUtils.removeAllTag(detail["content"])
         if StringUtils.isEmpty(contentRemoveTag) and ("contentImages" not in detail or StringUtils.isEmpty(detail["contentImages"])) and ("contentFiles" not in detail or StringUtils.isEmpty(detail["contentFiles"])):
             return True
-        headTitle = detail["headTitle"]
-        return ArticleUtils.isErrorTitle(headTitle)
+        if "headTitle" in detail:
+            headTitle = detail["headTitle"]
+            if ArticleUtils.isErrorTitle(headTitle):
+                return True
+        if ArticleUtils.isErrorContent(detail["content"]):
+            return True
+        return False
+
+    @classmethod
+    def isHistory(cls, spiderName):
+        return spiderName.startswith("history_")
+
+    @classmethod
+    def isStat(cls, spiderName):
+        return "auto_" not in spiderName and "test_" not in spiderName and not ArticleUtils.isHistory(spiderName)
+
+    @classmethod
+    def isNotTest(cls, spiderName):
+        return "test_" not in spiderName
+
+    @classmethod
+    def cleanHeadTitle(cls, headTitle):
+        if "_" in headTitle and len(StringUtils.trim(headTitle.split("_")[0])) >= 5:
+            return StringUtils.trim(headTitle.split("_")[0])
+        if "--" in headTitle and len(StringUtils.trim(headTitle.split("--")[0])) >=5:
+            return StringUtils.trim(headTitle.split("--")[0])
+        return headTitle
+
