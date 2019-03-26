@@ -1,7 +1,7 @@
 # @Date:   25-Mar-2019
 # @Email:  Tang@jeffery.top
 # @Filename: auto_spider.py
-# @Last modified time: 25-Mar-2019
+# @Last modified time: 26-Mar-2019
 
 
 
@@ -28,7 +28,10 @@ from crawl_commons.utils.time_util import *
 
 class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
     name = "auto_spider"  # 定义蜘蛛名
-    restrictNewspaper = ['http://bxjg.circ.gov.cn/web/site0/tab5241/']
+    restrictNewspaper = [
+    'http://bxjg.circ.gov.cn/web/site0/tab5241/',
+    'http://www.szse.cn/lawrules/service/servicedirect/t20181228_565063.html'
+    ]
 
     def __init__(self, name=None, **kwargs):
         scrapy.Spider.__init__(self, name=name, kwargs=kwargs)
@@ -57,6 +60,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             metaCopy['anchorTime'] = link_list[url][1]
             metaCopy['parse'] = 'detail'
             if not ArticleUtils.isFile(url):
+                # print()
                 yield self.do_request(url=url, meta=metaCopy)
             else:
                 metaCopy['title'] = metaCopy['anchorText']
@@ -67,11 +71,15 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             # yield scrapy.Request(url=url, meta=meta, callback=self.parseDetail)
         if self.isHistory:
             # 如果有下一页,爬下一页
-            nextpage_urls = ArticleUtils.getNextPageUrl('', response)
+            nextpage_urls = ArticleUtils.getNextPageUrl('', response, meta['currentPage'])
+            # print(nextpage_urls)
+            # print('**************************' )
             for url in nextpage_urls:
                 self.log("nextPage %s" % url)
+                # print("nextPage %s" % url)
                 # time.sleep(20)
                 meta['is_Nextpage'] = True
+                meta['currentPage'] = meta['currentPage'] + 1
                 yield self.do_request(url=url, meta=meta, cleanup=True)
                 # yield scrapy.Request(url=url, meta=meta, callback=self.parse)
 
@@ -285,7 +293,10 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 continue
 
             # 获取a标题文本内容，无内容的链接不抓取
-            text = a_tag.xpath('text()').extract_first()
+            texts = a_tag.xpath('text()').extract()
+            text = ''
+            for t in texts:
+                text = text + t
             if text is None:
                 continue
             if len(text.strip()) == 0:

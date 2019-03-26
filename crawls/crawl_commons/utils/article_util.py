@@ -1,7 +1,7 @@
 # @Date:   12-Mar-2019
 # @Email:  Tang@jeffery.top
 # @Filename: article_util.py
-# @Last modified time: 12-Mar-2019
+# @Last modified time: 26-Mar-2019
 
 
 
@@ -25,7 +25,7 @@ class ArticleUtils(object):
     FILE_POSTFIXS = [".pdf",".doc",".xls",".xlsx",".docx",".pptx",".ppt",".PDF",".DOC",".XLS",".XLSX",".DOCX",".PPTX",".PPT"]
     MERGE_FIELD = ["content","contentImages","contentFiles","contentSnapshot"]
     PAGE_CONTENT = [">上页<", ">上一页<", ">下页<", ">下一页<",">末页<",">尾页<",">首页<"]
-    COMMON_NEXT_PAGE_REGEX = [WebRegex({"regexType":"xpath","regexField":"nextPage", "regexContent":'//a[contains(text(),"下一页") or contains(text(),"下页")]//@href',"resultFormat":"","pageRenderType":0,"renderSeconds":"0","renderType":"0","renderBrowser":"","regexSort":"0","depthNumber" :"0","resultFilterRegex":"","maxPageNumber":"0"})]
+    COMMON_NEXT_PAGE_REGEX = [WebRegex({"regexType":"xpath","regexField":"nextPage", "regexContent":'//a[contains(text(),"下一页") or contains(text(),"下页") or text()=">"]//@href',"resultFormat":"","pageRenderType":0,"renderSeconds":"0","renderType":"0","renderBrowser":"","regexSort":"0","depthNumber" :"0","resultFilterRegex":"","maxPageNumber":"0"})]
     ERROR_PAGE_PATTERN = re.compile(u'.*?(404|服务器错误|页面找不到|页面没有找到|no-title).*')
     ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|BadGateway|BadRequest|ErrorPage).*')
 
@@ -346,12 +346,31 @@ class ArticleUtils(object):
         return item
 
     @classmethod
-    def getNextPageUrl(cls,regexs,response):
+    def getNextPageUrl(cls,regexs,response,currentPage):
+        '''
+        返回下页url
+        @currentPage： 当前页号
+        @isList: Ture：识别列表页 False:识别详情页
+        '''
         nextRegexs = regexs
         if nextRegexs is None or len(nextRegexs) <= 0:
             nextRegexs = ArticleUtils.COMMON_NEXT_PAGE_REGEX
         resultFilterRegex = nextRegexs[-1].resultFilterRegex
         nextUrls = ArticleUtils.getResponseContents4WebRegex(nextRegexs, response)
+        # print(nextUrls)
+        targetNextUrls = ArticleUtils.cleanPageUrl(nextUrls,resultFilterRegex, response)
+        # print(targetNextUrls)
+        if targetNextUrls == []:
+            # print("a[contains(text(),'%d页') or text()='%d']//@href"%(currentPage+1,currentPage+1))
+            nextUrls = response.xpath("//a[contains(text(),'%d页') or text()='%d']//@href"%(currentPage+1,currentPage+1)).extract()
+            targetNextUrls = ArticleUtils.cleanPageUrl(nextUrls, resultFilterRegex, response)
+        return targetNextUrls
+
+    @classmethod
+    def cleanPageUrl(cls, nextUrls,resultFilterRegex, response):
+        '''
+        原本getNextPageUrl中的方法，对urls进行清洗
+        '''
         targetNextUrls = []
         if nextUrls is not None and len(nextUrls) > 0:
             for nextUrl in nextUrls:
@@ -366,7 +385,6 @@ class ArticleUtils(object):
                 if StringUtils.isNotEmpty(resultFilterRegex) and not re.match(resultFilterRegex, nextUrlTmp):
                     continue
                 targetUrl = ArticleUtils.getFullUrl(nextUrlTmp,response.url)
-
                 targetNextUrls.append(targetUrl)
         return targetNextUrls
 
@@ -493,4 +511,3 @@ class ArticleUtils(object):
         if "--" in headTitle and len(StringUtils.trim(headTitle.split("--")[0])) >=5:
             return StringUtils.trim(headTitle.split("--")[0])
         return headTitle
-

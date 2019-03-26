@@ -1,7 +1,7 @@
 # @Date:   19-Mar-2019
 # @Email:  Tang@jeffery.top
 # @Filename: time_util.py
-# @Last modified time: 22-Mar-2019
+# @Last modified time: 25-Mar-2019
 
 
 
@@ -95,14 +95,7 @@ class TimeUtils(object):
         @param response
         @return 时间戳
         '''
-        link_list = re.findall(
-<<<<<<< HEAD
-            r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?", html)
-        time_get = ''
-=======
-            r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",
-            html)
->>>>>>> c15431f7f75e98923559ec858d3391cc10bc169f
+        link_list = re.findall(r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",html)
         timMill = None
         # print(link_list)
         if link_list != []:
