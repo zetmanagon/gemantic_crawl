@@ -52,8 +52,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if not ArticleUtils.isFile(url):
                 yield self.do_request(url=url, meta=metaCopy)
             else:
-                metaCopy['title'] = metaCopy['anchorText']
-                metaCopy['publishAt'] = metaCopy['anchorTime']
+                listData = {"title":metaCopy['anchorText'],"publishAt":metaCopy['anchorTime']}
+                metaCopy['listData'] = listData
                 self.crawlDB.saveFileCrawlDetail(metaCopy, url)
                 # item = self.parseFileurl(url=url, meta=metaCopy)
                 # self.crawlDB.saveCrawlDetail(item)
