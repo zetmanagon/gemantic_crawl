@@ -21,7 +21,10 @@ from crawl_commons.utils.time_util import *
 
 class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
     name = "auto_spider"  # 定义蜘蛛名
-    restrictNewspaper = ['http://bxjg.circ.gov.cn/web/site0/tab5241/']
+    restrictNewspaper = [
+        'http://bxjg.circ.gov.cn/web/site0/tab5241/',
+        'http://www.szse.cn/lawrules/service/servicedirect/t20181228_565063.html'
+    ]
 
     def __init__(self, name=None, **kwargs):
         scrapy.Spider.__init__(self, name=name, kwargs=kwargs)
