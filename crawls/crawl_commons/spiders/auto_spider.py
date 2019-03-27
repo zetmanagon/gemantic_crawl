@@ -49,6 +49,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             metaCopy['anchorText'] = link_list[url][0]
             metaCopy['anchorTime'] = link_list[url][1]
             metaCopy['parse'] = 'detail'
+            metaCopy["contentPageNumber"] = 1
             if not ArticleUtils.isFile(url):
                 yield self.do_request(url=url, meta=metaCopy)
             else:
@@ -60,46 +61,14 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             # yield scrapy.Request(url=url, meta=meta, callback=self.parseDetail)
         if self.isHistory:
             # 如果有下一页,爬下一页
-            nextpage_urls = ArticleUtils.getNextPageUrl('', response)
+            meta["pageNumber"] = meta["pageNumber"]+1
+            nextpage_urls = ArticleUtils.getNextPageUrl('', response,  meta["pageNumber"])
             for url in nextpage_urls:
                 self.log("nextPage %s" % url)
                 # time.sleep(20)
                 meta['is_Nextpage'] = True
                 yield self.do_request(url=url, meta=meta, cleanup=True)
                 # yield scrapy.Request(url=url, meta=meta, callback=self.parse)
-
-    # def parseFileurl(self, url, meta):
-    #     '''
-    #     处理正文页是纯文件的response
-    #     @param response：
-    #     @return item
-    #     '''
-    #     detailData = {}
-    #     if "detailData" in meta:
-    #         detailData = meta["detailData"]
-    #     if len(detailData) <= 0:
-    #         detailData["title"] = meta['anchorText'].strip()
-    #         if detailData["title"].find('...') != -1 or detailData["title"] == '':
-    #             detailData["title"] = "NoNameFile"
-    #         # ts = time.strptime(meta["timestamp"], "%Y-%m-%d %H-%M-%S")
-    #         # ts = int(time.mktime(ts)) * 1000
-    #         detailData["publishAt"] = TimeUtils.getNowMill()
-    #         detailData["url"] = url
-    #     # detailData["html"] = "This page doesn't have content, it's a file's url."
-    #     # ArticleUtils.mergeDict(detailData, "content", "This page doesn't have content, it's a file url.")
-    #     # file = {url: {"id": ArticleUtils.getArticleId(url), "name": detailData["title"], "contentUrl": url, "url": url}}
-    #     # ArticleUtils.mergeDict(detailData, "contentFiles", file)
-    #     # item = ArticleUtils.meta2item(meta, detailData["url"])
-    #     # for (k, v) in detailData.items():
-    #     #     itemValue = None
-    #     #     if "category" == k and k in item:
-    #     #         itemValue = item[k] + "/" + v
-    #     #     elif "contentImages" == k or "contentFiles" == k:
-    #     #         itemValue = json.dumps(list(v.values()), ensure_ascii=False)
-    #     #     else:
-    #     #         itemValue = v
-    #     #     item[k] = itemValue
-    #     return item
 
     def parseDetail(self, response):
         '''
@@ -163,7 +132,11 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         if enableSnapshot:
             ArticleUtils.mergeDict(detailData, "contentSnapshot", content_snap)
         # 爬取下一页
-        nextpage_urls = ArticleUtils.getNextPageUrl('', response)
+        contentPageNumber = meta["contentPageNumber"]
+        nextpage_urls = []
+        if  contentPageNumber < 100:
+            meta["contentPageNumber"] = contentPageNumber + 1
+            nextpage_urls = ArticleUtils.getNextPageUrl('', response,meta["contentPageNumber"])
         if len(nextpage_urls) != 0:
             meta["detailData"] = detailData
             yield scrapy.Request(url=nextpage_urls, meta=meta, callback=self.parseDetail)
@@ -278,7 +251,10 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 continue
 
             # 获取a标题文本内容，无内容的链接不抓取
-            text = a_tag.xpath('text()').extract_first()
+            texts = a_tag.xpath('text()').extract()
+            text = ''
+            for t in texts:
+                text = text + t
             if text is None:
                 continue
             if len(text.strip()) == 0:

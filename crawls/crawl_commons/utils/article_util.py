@@ -349,13 +349,36 @@ class ArticleUtils(object):
                 item[k] = v
         return item
 
+    # @classmethod
+    # def getNextPageUrl(cls,regexs,response):
+    #     nextRegexs = regexs
+    #     if nextRegexs is None or len(nextRegexs) <= 0:
+    #         nextRegexs = ArticleUtils.COMMON_NEXT_PAGE_REGEX
+    #     resultFilterRegex = nextRegexs[-1].resultFilterRegex
+    #     nextUrls = ArticleUtils.getResponseContents4WebRegex(nextRegexs, response)
+    #     targetNextUrls = []
+    #     if nextUrls is not None and len(nextUrls) > 0:
+    #         for nextUrl in nextUrls:
+    #             if StringUtils.isEmpty(nextUrl):
+    #                 continue
+    #             if "javascript:" in nextUrl:
+    #                 continue
+    #             nextUrlTmp = nextUrl.replace('"',"")
+    #             nextUrlTmp = nextUrlTmp.replace("'","")
+    #             if StringUtils.isEmpty(nextUrlTmp):
+    #                 continue
+    #             if StringUtils.isNotEmpty(resultFilterRegex) and not re.match(resultFilterRegex, nextUrlTmp):
+    #                 continue
+    #             targetUrl = ArticleUtils.getFullUrl(nextUrlTmp,response.url)
+    #
+    #             targetNextUrls.append(targetUrl)
+    #     return targetNextUrls
+
     @classmethod
-    def getNextPageUrl(cls,regexs,response):
-        nextRegexs = regexs
-        if nextRegexs is None or len(nextRegexs) <= 0:
-            nextRegexs = ArticleUtils.COMMON_NEXT_PAGE_REGEX
-        resultFilterRegex = nextRegexs[-1].resultFilterRegex
-        nextUrls = ArticleUtils.getResponseContents4WebRegex(nextRegexs, response)
+    def cleanPageUrl(cls, nextUrls, resultFilterRegex, response):
+        '''
+        原本getNextPageUrl中的方法，对urls进行清洗
+        '''
         targetNextUrls = []
         if nextUrls is not None and len(nextUrls) > 0:
             for nextUrl in nextUrls:
@@ -363,15 +386,36 @@ class ArticleUtils(object):
                     continue
                 if "javascript:" in nextUrl:
                     continue
-                nextUrlTmp = nextUrl.replace('"',"")
-                nextUrlTmp = nextUrlTmp.replace("'","")
+                nextUrlTmp = nextUrl.replace('"', "")
+                nextUrlTmp = nextUrlTmp.replace("'", "")
                 if StringUtils.isEmpty(nextUrlTmp):
                     continue
                 if StringUtils.isNotEmpty(resultFilterRegex) and not re.match(resultFilterRegex, nextUrlTmp):
                     continue
-                targetUrl = ArticleUtils.getFullUrl(nextUrlTmp,response.url)
-
+                targetUrl = ArticleUtils.getFullUrl(nextUrlTmp, response.url)
                 targetNextUrls.append(targetUrl)
+        return targetNextUrls
+
+    @classmethod
+    def getNextPageUrl(cls, regexs, response, currentPage):
+        '''
+        返回下页url
+        @currentPage： 当前页号
+        @isList: Ture：识别列表页 False:识别详情页
+        '''
+        nextRegexs = regexs
+        if nextRegexs is None or len(nextRegexs) <= 0:
+            nextRegexs = ArticleUtils.COMMON_NEXT_PAGE_REGEX
+        resultFilterRegex = nextRegexs[-1].resultFilterRegex
+        nextUrls = ArticleUtils.getResponseContents4WebRegex(nextRegexs, response)
+        # print(nextUrls)
+        targetNextUrls = ArticleUtils.cleanPageUrl(nextUrls, resultFilterRegex, response)
+        # print(targetNextUrls)
+        if targetNextUrls == [] and currentPage is not None:
+            # print("a[contains(text(),'%d页') or text()='%d']//@href"%(currentPage+1,currentPage+1))
+            nextUrls = response.xpath(
+                "//a[contains(text(),'%d页') or text()='%d']//@href" % (currentPage + 1, currentPage + 1)).extract()
+            targetNextUrls = ArticleUtils.cleanPageUrl(nextUrls, resultFilterRegex, response)
         return targetNextUrls
 
     @classmethod
