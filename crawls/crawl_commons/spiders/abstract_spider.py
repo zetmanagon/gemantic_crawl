@@ -142,12 +142,11 @@ class AbstractSpider(object):
             nextPageRegex = regexDict["nextPage"]
             maxPageNumber = nextPageRegex[-1].maxPageNumber
         if self.isHistory and ((maxPageNumber > 0 and pageNumber <= maxPageNumber) or maxPageNumber <= 0):
-            meta["pageNumber"] = meta["pageNumber"] + 1
+            meta["pageNumber"] = pageNumber + 1
             nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex, response,meta["pageNumber"])
             if len(nextUrls) > 0 and StringUtils.isNotEmpty(nextUrls[0]):
                 targetNextUrl = nextUrls[0]
                 self.LOG.info("nextPage %s" % targetNextUrl)
-                meta["pageNumber"] = meta["pageNumber"] + 1
                 yield self.do_request(url=targetNextUrl, meta=meta)
                 # yield scrapy.Request(url=targetNextUrl, meta=meta, callback=self.parse)
             else:
