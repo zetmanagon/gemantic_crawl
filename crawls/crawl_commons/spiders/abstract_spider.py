@@ -143,11 +143,11 @@ class AbstractSpider(object):
             nextPageRegex = regexDict["nextPage"]
             maxPageNumber = nextPageRegex[-1].maxPageNumber
         if self.isHistory and ((maxPageNumber > 0 and pageNumber <= maxPageNumber) or maxPageNumber <= 0):
-            nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex, response)
+            meta["pageNumber"] = pageNumber + 1
+            nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex, response,meta["pageNumber"])
             if len(nextUrls) > 0 and StringUtils.isNotEmpty(nextUrls[0]):
                 targetNextUrl = nextUrls[0]
                 self.LOG.info("nextPage %s" % targetNextUrl)
-                meta["pageNumber"] = meta["pageNumber"] + 1
                 yield self.do_request(url=targetNextUrl, meta=meta)
                 # yield scrapy.Request(url=targetNextUrl, meta=meta, callback=self.parse)
             else:
@@ -262,14 +262,14 @@ class AbstractSpider(object):
                 maxPageNumber = nextPageRegex[-1].maxPageNumber
             targetNextUrl = ""
             if maxPageNumber <= 0 or (maxPageNumber > 0 and contentPageNumber < maxPageNumber):
-                nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex, response)
+                meta["contentPageNumber"] = contentPageNumber + 1
+                nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex, response,meta["contentPageNumber"])
                 if len(nextUrls) > 0 and StringUtils.isNotEmpty(nextUrls[0]):
                     targetNextUrl = nextUrls[0]
             #防止死循环翻页
             if StringUtils.isNotEmpty(targetNextUrl) and contentPageNumber <= 100:
                 meta["detailData"] = detailData
                 meta["autoDetailData"] = autoDetailData
-                meta["contentPageNumber"] = contentPageNumber + 1
                 self.LOG.info("detail nextPage %s %s" % (str(contentPageNumber + 1), targetNextUrl))
                 yield self.do_request(url=url, meta=meta,dont_filter=False,cleanup=True)
                 # yield scrapy.Request(url=targetNextUrl, meta=meta, callback=self.parseDetail)

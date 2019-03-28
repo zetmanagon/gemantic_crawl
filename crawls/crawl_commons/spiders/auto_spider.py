@@ -1,10 +1,3 @@
-# @Date:   25-Mar-2019
-# @Email:  Tang@jeffery.top
-# @Filename: auto_spider.py
-# @Last modified time: 26-Mar-2019
-
-
-
 from readability import Document
 from newspaper import Article
 import scrapy
@@ -29,8 +22,8 @@ from crawl_commons.utils.time_util import *
 class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
     name = "auto_spider"  # 定义蜘蛛名
     restrictNewspaper = [
-    'http://bxjg.circ.gov.cn/web/site0/tab5241/',
-    'http://www.szse.cn/lawrules/service/servicedirect/t20181228_565063.html'
+        'http://bxjg.circ.gov.cn/web/site0/tab5241/',
+        'http://www.szse.cn/lawrules/service/servicedirect/t20181228_565063.html'
     ]
 
     def __init__(self, name=None, **kwargs):
@@ -59,62 +52,26 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             metaCopy['anchorText'] = link_list[url][0]
             metaCopy['anchorTime'] = link_list[url][1]
             metaCopy['parse'] = 'detail'
+            metaCopy["contentPageNumber"] = 1
             if not ArticleUtils.isFile(url):
-                # print()
                 yield self.do_request(url=url, meta=metaCopy)
             else:
-                metaCopy['title'] = metaCopy['anchorText']
-                metaCopy['publishAt'] = TimeUtils.getNowMill()
+                listData = {"title":metaCopy['anchorText'],"publishAt":metaCopy['anchorTime']}
+                metaCopy['listData'] = listData
                 self.crawlDB.saveFileCrawlDetail(metaCopy, url)
                 # item = self.parseFileurl(url=url, meta=metaCopy)
                 # self.crawlDB.saveCrawlDetail(item)
             # yield scrapy.Request(url=url, meta=meta, callback=self.parseDetail)
         if self.isHistory:
             # 如果有下一页,爬下一页
-            nextpage_urls = ArticleUtils.getNextPageUrl('', response, meta['currentPage'])
-            # print(nextpage_urls)
-            # print('**************************' )
+            meta["pageNumber"] = meta["pageNumber"]+1
+            nextpage_urls = ArticleUtils.getNextPageUrl('', response,  meta["pageNumber"])
             for url in nextpage_urls:
                 self.log("nextPage %s" % url)
-                # print("nextPage %s" % url)
                 # time.sleep(20)
                 meta['is_Nextpage'] = True
-                meta['currentPage'] = meta['currentPage'] + 1
                 yield self.do_request(url=url, meta=meta, cleanup=True)
                 # yield scrapy.Request(url=url, meta=meta, callback=self.parse)
-
-    # def parseFileurl(self, url, meta):
-    #     '''
-    #     处理正文页是纯文件的response
-    #     @param response：
-    #     @return item
-    #     '''
-    #     detailData = {}
-    #     if "detailData" in meta:
-    #         detailData = meta["detailData"]
-    #     if len(detailData) <= 0:
-    #         detailData["title"] = meta['anchorText'].strip()
-    #         if detailData["title"].find('...') != -1 or detailData["title"] == '':
-    #             detailData["title"] = "NoNameFile"
-    #         # ts = time.strptime(meta["timestamp"], "%Y-%m-%d %H-%M-%S")
-    #         # ts = int(time.mktime(ts)) * 1000
-    #         detailData["publishAt"] = TimeUtils.getNowMill()
-    #         detailData["url"] = url
-    #     # detailData["html"] = "This page doesn't have content, it's a file's url."
-    #     # ArticleUtils.mergeDict(detailData, "content", "This page doesn't have content, it's a file url.")
-    #     # file = {url: {"id": ArticleUtils.getArticleId(url), "name": detailData["title"], "contentUrl": url, "url": url}}
-    #     # ArticleUtils.mergeDict(detailData, "contentFiles", file)
-    #     # item = ArticleUtils.meta2item(meta, detailData["url"])
-    #     # for (k, v) in detailData.items():
-    #     #     itemValue = None
-    #     #     if "category" == k and k in item:
-    #     #         itemValue = item[k] + "/" + v
-    #     #     elif "contentImages" == k or "contentFiles" == k:
-    #     #         itemValue = json.dumps(list(v.values()), ensure_ascii=False)
-    #     #     else:
-    #     #         itemValue = v
-    #     #     item[k] = itemValue
-    #     return item
 
     def parseDetail(self, response):
         '''
@@ -178,7 +135,11 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         if enableSnapshot:
             ArticleUtils.mergeDict(detailData, "contentSnapshot", content_snap)
         # 爬取下一页
-        nextpage_urls = ArticleUtils.getNextPageUrl('', response)
+        contentPageNumber = meta["contentPageNumber"]
+        nextpage_urls = []
+        if  contentPageNumber < 100:
+            meta["contentPageNumber"] = contentPageNumber + 1
+            nextpage_urls = ArticleUtils.getNextPageUrl('', response,meta["contentPageNumber"])
         if len(nextpage_urls) != 0:
             meta["detailData"] = detailData
             yield scrapy.Request(url=nextpage_urls, meta=meta, callback=self.parseDetail)
