@@ -50,7 +50,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if not ArticleUtils.isSameSite(start_url,url):
                 continue
             metaCopy = meta.copy()
-            metaCopy['anchorText'] = link_list[url][0]
+            metaCopy['anchorText'] = ArticleUtils.clearListTitle(link_list[url][0])
             metaCopy['anchorTime'] = link_list[url][1]
             metaCopy['parse'] = 'detail'
             metaCopy["contentPageNumber"] = 1
