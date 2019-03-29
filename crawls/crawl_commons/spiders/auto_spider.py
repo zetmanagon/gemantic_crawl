@@ -194,7 +194,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         @return：urls
         '''
         listList = []  # 列表的列表
-        fibbden = [10.375, 10.1875]  # 禁用的，重构后用静态
+        fibbdenchars =[10.375,10.1875,16.5] # 禁用的字数，重构后用静态
+        fibbdenwords =[6.0] # 禁用的词数，重构后用静态
         maxLength = 0
         maxName = ''
         for father_node in href_parent.keys():
@@ -211,16 +212,16 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 print(text.strip(), '|', href)
             # 记录max
             if (child_total_length / child_count) > maxLength and child_count != 1 and (
-                    child_total_length / child_count) not in fibbden:
+                    child_total_length / child_count) not in fibbdenchars:
                 maxLength = child_total_length / child_count
                 maxName = father_node
             print(father_node, child_count, child_total_length / child_count, word_count / child_count)
-            if child_total_length / child_count > averageLength and word_count / child_count > averageWordCounts and child_count > 1:
-                print("ture")
-
-                for _, text, _, href, time in href_parent[father_node]:
-                    urls[href] = [text, time]
-                listList.append(urls)
+            if child_total_length / child_count > averageLength and word_count / child_count > averageWordCounts and child_count > 1 :
+                if not (child_total_length / child_count) in fibbdenchars and (word_count / child_count)  in fibbdenwords:
+                    print("ture")
+                    for _, text, _, href, time in href_parent[father_node]:
+                        urls[href] = [text, time]
+                    listList.append(urls)
         print('-------------------------------')
         final_list = dict()
         if max is True:
