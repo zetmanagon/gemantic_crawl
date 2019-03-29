@@ -174,7 +174,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
 
         href_parent = self.getSameParent(starturl, a_tags, fine=False)
         onlyFlag =True
-        if not ArticleUtils.isSameSite('http://www.gzcz.gov.cn', start_url):
+        if ArticleUtils.isSameSite('http://www.gzcz.gov.cn', start_url):
             onlyFlag = False
         final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=False)
         print('过滤后的链接数目', len(final_urls))
