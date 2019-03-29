@@ -173,10 +173,13 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         print('所有的链接数目', len(a_tags))
 
         href_parent = self.getSameParent(starturl, a_tags, fine=False)
-        final_urls = self.listFilter(href_parent, 10.8, 5.5, only=True, max=False)
+        onlyFlag =True
+        if not ArticleUtils.isSameSite('http://www.gzcz.gov.cn', start_url):
+            onlyFlag = False
+        final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=False)
         print('过滤后的链接数目', len(final_urls))
         if len(final_urls) == 0:
-            final_urls = self.listFilter(href_parent, 10.8, 5.5, only=True, max=True)
+            final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=True)
             print('max过滤后的链接数目', len(final_urls))
         return final_urls
 
@@ -231,8 +234,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             return final_list
         else:
             for l in listList:
-                for u in l:
-                    final_list.update(u)
+                final_list.update(l)
             return final_list
 
     def getSameParent(self, starturl, a_tags, fine):
