@@ -87,6 +87,14 @@ class ArticleUtils(object):
         dr = re.compile(u'<[^>]+>', re.S)
         dd = dr.sub(u"", str)
         dd = StringUtils.replaceSpecialWords(dd)
+        dd = StringUtils.trim(dd)
+        return dd
+
+    @classmethod
+    def clearListTitle(cls, listTitle):
+        dd = ArticleUtils.removeAllTag(listTitle)
+        if dd.startswith("·"):
+            dd = dd[1:]
         return dd
 
 
