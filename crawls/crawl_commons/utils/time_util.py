@@ -86,8 +86,6 @@ class TimeUtils(object):
     def getNowMill(cls):
         return int(time.time()*1000)
 
-
-
     @classmethod
     def get_conent_time(cls, html):
         '''
@@ -97,47 +95,85 @@ class TimeUtils(object):
         '''
         link_list = re.findall(r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",html)
         timMill = None
-        # print(link_list)
-        if link_list != []:
-            for t in link_list:
-                if t[5] != '':
-                    try:
-                        time_get = t[0]
-                        for ele in t:
-                            if time_get.find(ele) == -1:
-                                time_get += ele
-                        # print(time_get)
-                        timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
-                    except OverflowError:
-                        i = 0
-                        while i < len(link_list):
-                            time_get = link_list[i][0]
-                            for ele in link_list[i]:
-                                if time_get.find(ele) == -1:
-                                    time_get += ele
-                            # print(time_get)
-                            try:
-                                timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
-                            except OverflowError:
-                                i = i + 1
-                                continue
-                            break
-                else:
-                    i = 0
-                    while i < len(link_list):
-                        time_get = link_list[i][0]
-                        for ele in link_list[i]:
-                            if time_get.find(ele) == -1:
-                                time_get += ele
-                        # print(time_get)
-                        try:
-                            timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
-                        except OverflowError:
-                            i = i + 1
-                            continue
-                        break
+        timelist =[]
+        timeAtLine =''
+        for line in link_list:
+            timeAtLine = line[0]
+            for ele in line:
+                if timeAtLine.find(ele) == -1:
+                    timeAtLine +=ele
+            try:
+                timMill = TimeUtils.convert2Mill4Default(timeAtLine, "", True)
+            except OverflowError:
+                timMill = 0
+            timelist.append(timMill)
+        # timelist.sort()
+        for timMill in timelist:  # 取最新的时间
+            if TimeUtils.getNowMill() - timMill > 86400000:  # 时间如果大于24小时，直接用
+                return timMill
+            elif time.localtime(time.time()).tm_mday - time.localtime(timMill/1000).tm_mday > 1:  # 时间没小于24h但是隔天，直接用
+                return timMill
+            # elif len(timelist) >1:  # 不然可能是当前时间，用第二个时间
+            #     return timelist[-2]
+        if timelist != []:  # 如果所有时间都比较近，那么就用第一个时间
+            timMill = timelist[0]
         if timMill is None:
             return 0
         if timMill < 0:
             timMill = 0
         return timMill
+
+
+    # @classmethod
+    # def get_conent_time(cls, html):
+    #     '''
+    #     提取时间,并转化为时间戳
+    #     @param response
+    #     @return 时间戳
+    #     '''
+    #     link_list = re.findall(r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",html)
+    #     timMill = None
+    #     # print(link_list)
+    #     if link_list != []:
+    #         for t in link_list:
+    #             if t[5] != '':
+    #                 try:
+    #                     time_get = t[0]
+    #                     for ele in t:
+    #                         if time_get.find(ele) == -1:
+    #                             time_get += ele
+    #                     # print(time_get)
+    #                     timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
+    #                 except OverflowError:
+    #                     i = 0
+    #                     while i < len(link_list):
+    #                         time_get = link_list[i][0]
+    #                         for ele in link_list[i]:
+    #                             if time_get.find(ele) == -1:
+    #                                 time_get += ele
+    #                         # print(time_get)
+    #                         try:
+    #                             timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
+    #                         except OverflowError:
+    #                             i = i + 1
+    #                             continue
+    #                         break
+    #             else:
+    #                 i = 0
+    #                 while i < len(link_list):
+    #                     time_get = link_list[i][0]
+    #                     for ele in link_list[i]:
+    #                         if time_get.find(ele) == -1:
+    #                             time_get += ele
+    #                     # print(time_get)
+    #                     try:
+    #                         timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
+    #                     except OverflowError:
+    #                         i = i + 1
+    #                         continue
+    #                     break
+    #     if timMill is None:
+    #         return 0
+    #     if timMill < 0:
+    #         timMill = 0
+    #     return timMill

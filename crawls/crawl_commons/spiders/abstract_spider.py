@@ -45,7 +45,7 @@ class AbstractSpider(object):
         timestamp = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))  # 该次爬虫的时间戳
         # 定义爬取的链接
         for seed in seeds:
-            # if seed.url != 'http://www.scio.gov.cn/xwfbh/37380/index.htm':
+            # if seed.url != 'http://www.gzdpc.gov.cn/zwgk/xxgkml/zdlyxx_81482/zdxm_81483/xmsp/':
             #     continue
             regex = self.seedDB.get_regex(seed.regexName)
             if isRegex and (regex is None or len(regex)<=0):
@@ -64,7 +64,6 @@ class AbstractSpider(object):
             meta["renderSeconds"] = seed.renderSeconds
             meta["nocontentRender"] = seed.nocontentRender
             meta['is_Nextpage'] = False
-            meta['currentPage'] = 1
             yield meta
 
 

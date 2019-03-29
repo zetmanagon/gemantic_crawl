@@ -25,7 +25,7 @@ class ArticleUtils(object):
     FILE_POSTFIXS = [".pdf",".doc",".xls",".xlsx",".docx",".pptx",".ppt",".PDF",".DOC",".XLS",".XLSX",".DOCX",".PPTX",".PPT"]
     MERGE_FIELD = ["content","contentImages","contentFiles","contentSnapshot"]
     PAGE_CONTENT = [">上页<", ">上一页<", ">下页<", ">下一页<",">末页<",">尾页<",">首页<"]
-    COMMON_NEXT_PAGE_REGEX = [WebRegex({"regexType":"xpath","regexField":"nextPage", "regexContent":'//a[contains(text(),"下一页") or contains(text(),"下页") or contains(text(),"后一页") or text()=">" or or text()=">>"]//@href',"resultFormat":"","pageRenderType":0,"renderSeconds":"0","renderType":"0","renderBrowser":"","regexSort":"0","depthNumber" :"0","resultFilterRegex":"","maxPageNumber":"0"})]
+    COMMON_NEXT_PAGE_REGEX = [WebRegex({"regexType":"xpath","regexField":"nextPage", "regexContent":'//a[contains(text(),"下一页") or contains(text(),"下页") or contains(text(),"后一页") or text()=">" ]//@href',"resultFormat":"","pageRenderType":0,"renderSeconds":"0","renderType":"0","renderBrowser":"","regexSort":"0","depthNumber" :"0","resultFilterRegex":"","maxPageNumber":"0"})]
     ERROR_PAGE_PATTERN = re.compile(u'.*?(404|服务器错误|页面找不到|页面没有找到|no-title).*')
     ERROR_PAGE_TITLE_PATTERN = re.compile(u'.*?(首页|末页|上一页|下一页|上页|下页|尾页|后一页|前一页).*')
 

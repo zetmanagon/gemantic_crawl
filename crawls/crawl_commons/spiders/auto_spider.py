@@ -45,6 +45,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         if start_url in self.restrictNewspaper:
             meta['newspaper'] = True
         link_list = self.get_list_urls(start_url, response)
+        self.log(link_list)
         for url in link_list.keys():
             if not ArticleUtils.isSameSite(start_url,url):
                 continue
@@ -68,7 +69,6 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             nextpage_urls = ArticleUtils.getNextPageUrl('', response,  meta["pageNumber"])
             for url in nextpage_urls:
                 self.log("nextPage %s" % url)
-                # time.sleep(20)
                 meta['is_Nextpage'] = True
                 yield self.do_request(url=url, meta=meta, cleanup=True)
                 # yield scrapy.Request(url=url, meta=meta, callback=self.parse)
@@ -205,7 +205,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 child_total_length += len(text.strip())
                 word_count += len(" ".join(jieba.cut(text.strip())).split(" "))
                 # 链接描述平均字数和次数都大于阈值
-                print(text, '|', href)
+                print(text.strip(), '|', href)
             # 记录max
             if (child_total_length / child_count) > maxLength and child_count != 1 and (
                     child_total_length / child_count) not in fibbden:
@@ -217,7 +217,6 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
 
                 for _, text, _, href, time in href_parent[father_node]:
                     urls[href] = [text, time]
-                    print('------------------------')
                 listList.append(urls)
         print('-------------------------------')
         final_list = dict()
