@@ -120,9 +120,9 @@ class ArticleUtils(object):
     @classmethod
     def getDomain(cls, url):
         site = ArticleUtils.getSite(url)
-        print(site)
+        # print(site)
         siteArr = site.split(".")
-        print(len(siteArr))
+        # print(len(siteArr))
         if len(siteArr)<= 3:
             return site
         return ".".join(siteArr[-3:])
