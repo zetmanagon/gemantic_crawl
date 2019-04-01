@@ -50,7 +50,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if not ArticleUtils.isSameSite(start_url,url):
                 continue
             metaCopy = meta.copy()
-            metaCopy['anchorText'] = link_list[url][0]
+            metaCopy['anchorText'] = ArticleUtils.clearListTitle(link_list[url][0])
             metaCopy['anchorTime'] = link_list[url][1]
             metaCopy['parse'] = 'detail'
             metaCopy["contentPageNumber"] = 1
@@ -174,7 +174,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
 
         href_parent = self.getSameParent(starturl, a_tags, fine=False)
         onlyFlag =True
-        if ArticleUtils.isSameSite('http://www.gzcz.gov.cn', start_url):
+        if ArticleUtils.isSameSite('http://www.gzcz.gov.cn', starturl):
             onlyFlag = False
         final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=False)
         print('过滤后的链接数目', len(final_urls))
@@ -216,12 +216,12 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 maxLength = child_total_length / child_count
                 maxName = father_node
             print(father_node, child_count, child_total_length / child_count, word_count / child_count)
-            if child_total_length / child_count > averageLength and word_count / child_count > averageWordCounts and child_count > 1 :
-                if not (child_total_length / child_count) in fibbdenchars and (word_count / child_count)  in fibbdenwords:
-                    print("ture")
-                    for _, text, _, href, time in href_parent[father_node]:
-                        urls[href] = [text, time]
-                    listList.append(urls)
+            if child_total_length / child_count > averageLength and word_count / child_count > averageWordCounts and child_count > 1:
+                print("ture")
+
+                for _, text, _, href, time in href_parent[father_node]:
+                    urls[href] = [text, time]
+                listList.append(urls)
         print('-------------------------------')
         final_list = dict()
         if max is True:

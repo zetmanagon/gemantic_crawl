@@ -29,7 +29,7 @@ class ArticleUtils(object):
     ERROR_PAGE_PATTERN = re.compile(u'.*?(404|服务器错误|页面找不到|页面没有找到|no-title).*')
     ERROR_PAGE_TITLE_PATTERN = re.compile(u'.*?(首页|末页|上一页|下一页|上页|下页|尾页|后一页|前一页).*')
 
-    ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|BadGateway|BadRequest|ErrorPage).*')
+    ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|请用新域名访问|BadGateway|BadRequest|ErrorPage).*')
 
     @classmethod
     def removeTag4Content(cls, str):
@@ -87,6 +87,14 @@ class ArticleUtils(object):
         dr = re.compile(u'<[^>]+>', re.S)
         dd = dr.sub(u"", str)
         dd = StringUtils.replaceSpecialWords(dd)
+        dd = StringUtils.trim(dd)
+        return dd
+
+    @classmethod
+    def clearListTitle(cls, listTitle):
+        dd = ArticleUtils.removeAllTag(listTitle)
+        if dd.startswith("·"):
+            dd = dd[1:]
         return dd
 
 

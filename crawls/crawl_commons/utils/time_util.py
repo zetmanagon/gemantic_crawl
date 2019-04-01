@@ -95,13 +95,13 @@ class TimeUtils(object):
         '''
         link_list = re.findall(r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",html)
         timMill = None
-        timelist =[]
-        timeAtLine =''
+        timelist = []
+        timeAtLine = ''
         for line in link_list:
             timeAtLine = line[0]
             for ele in line:
                 if timeAtLine.find(ele) == -1:
-                    timeAtLine +=ele
+                    timeAtLine += ele
             try:
                 timMill = TimeUtils.convert2Mill4Default(timeAtLine, "", True)
             except OverflowError:
@@ -111,7 +111,7 @@ class TimeUtils(object):
         for timMill in timelist:  # 取最新的时间
             if TimeUtils.getNowMill() - timMill > 86400000:  # 时间如果大于24小时，直接用
                 return timMill
-            elif time.localtime(time.time()).tm_mday - time.localtime(timMill/1000).tm_mday > 1:  # 时间没小于24h但是隔天，直接用
+            elif time.localtime(time.time()).tm_mday - time.localtime(timMill / 1000).tm_mday > 1:  # 时间没小于24h但是隔天，直接用
                 return timMill
             # elif len(timelist) >1:  # 不然可能是当前时间，用第二个时间
             #     return timelist[-2]
@@ -123,7 +123,6 @@ class TimeUtils(object):
             timMill = 0
         return timMill
 
-
     # @classmethod
     # def get_conent_time(cls, html):
     #     '''
@@ -131,7 +130,9 @@ class TimeUtils(object):
     #     @param response
     #     @return 时间戳
     #     '''
-    #     link_list = re.findall(r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",html)
+    #     link_list = re.findall(
+    #         r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",
+    #         html)
     #     timMill = None
     #     # print(link_list)
     #     if link_list != []:
