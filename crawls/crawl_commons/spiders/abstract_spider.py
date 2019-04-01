@@ -167,6 +167,9 @@ class AbstractSpider(object):
         regexList = meta["seedRegex"]
         regexDict = regexList[-1].regexDict
         seed = meta["seedInfo"]
+        listData = {}
+        if "listData" in meta:
+            listData = meta["listData"]
         enableDownloadFile = False
         enableDownloadImage = False
         enableSnapshot = False
@@ -245,9 +248,9 @@ class AbstractSpider(object):
         else:
             ArticleUtils.mergeNewDict(detailData, contentData)
 
-            if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData:
+            if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData and "publishAt" not in listData:
                 autoDetailData["publishAt"] = TimeUtils.get_conent_time(html)
-            if contentAutoData is None and ("title" not in detailData or StringUtils.isEmpty(pageContent)):
+            if contentAutoData is None and (("title" not in detailData and "title" not in listData) or StringUtils.isEmpty(pageContent)):
                 contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber,html, enableDownloadImage, enableSnapshot)
             ArticleUtils.mergeNewDict(autoDetailData, contentAutoData)
 
