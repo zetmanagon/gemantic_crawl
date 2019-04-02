@@ -31,6 +31,8 @@ class ArticleUtils(object):
 
     ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|请用新域名访问|BadGateway|BadRequest|ErrorPage).*')
 
+    ERROR_URL_PATTERN = re.compile(u'^((?!www.gov.cn/zhuanti/|www.china.com.cn/zhibo/).)*$')
+
     @classmethod
     def removeTag4Content(cls, str):
         if str is None:
@@ -555,3 +557,10 @@ class ArticleUtils(object):
             return StringUtils.trim(headTitle.split("--")[0])
         return headTitle
 
+    @classmethod
+    def isErrorUrl(cls, url):
+        if url is None:
+            return True
+        if ArticleUtils.ERROR_URL_PATTERN.match(url) is not None:
+            return False
+        return True

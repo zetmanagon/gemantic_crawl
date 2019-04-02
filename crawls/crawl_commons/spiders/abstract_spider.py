@@ -101,6 +101,8 @@ class AbstractSpider(object):
             if not isVaildUrl:
                 continue
             targetUrl = ArticleUtils.getFullUrl(detailUrl, response.url)
+            if ArticleUtils.isErrorUrl(targetUrl):
+                continue
             if depthNumber == 0:
                 targetUrl = ArticleUtils.getFullUrl(detailUrl, seed.url)
             self.LOG.info("isDetail %s targetUrl %s" % (str(isDetail), targetUrl))
