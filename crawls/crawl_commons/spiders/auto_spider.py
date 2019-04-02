@@ -25,6 +25,10 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         'http://bxjg.circ.gov.cn/web/site0/tab5241/',
         'http://www.szse.cn/lawrules/service/servicedirect/t20181228_565063.html'
     ]
+    restrictContentTitle = [
+        'http://www.gzcz.gov.cn',
+        'http://www.gzdpc.gov.cn'
+    ]
 
     def __init__(self, name=None, **kwargs):
         scrapy.Spider.__init__(self, name=name, kwargs=kwargs)
@@ -50,7 +54,11 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if not ArticleUtils.isSameSite(start_url,url):
                 continue
             metaCopy = meta.copy()
-            metaCopy['anchorText'] = ArticleUtils.clearListTitle(link_list[url][0])
+            for resUrl in self.restrictContentTitle:
+                if ArticleUtils.isSameSite(resUrl, start_url):
+                    metaCopy['anchorText'] = ''
+                else:
+                    metaCopy['anchorText'] = ArticleUtils.clearListTitle(link_list[url][0])
             metaCopy['anchorTime'] = link_list[url][1]
             metaCopy['parse'] = 'detail'
             metaCopy["contentPageNumber"] = 1
