@@ -228,14 +228,16 @@ class AbstractSpider(object):
                         contentData["contentSnapshot"] = contentSnapshots[0]
                         # ArticleUtils.mergeDict(detailData,"contentSnapshot",contentSnapshots[0])
 
-        if StringUtils.isEmpty(pageContent):
+        if StringUtils.isEmpty(pageContent) and pageContentImages is None:
             if contentAutoData is None:
                 contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber, html, enableDownloadImage,enableSnapshot)
+            if "contentImages" in contentAutoData:
+                pageContentImages = contentAutoData["contentImages"]
             if "content" in contentAutoData:
                 pageContent = ArticleUtils.removeAllTag(contentAutoData["content"])
 
 
-        if StringUtils.isEmpty(pageContent) and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
+        if StringUtils.isEmpty(pageContent) and pageContentImages is None and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
             metaCopy = meta.copy()
             metaCopy["renderType"] = 1
             metaCopy["renderSeconds"] = 5
@@ -250,7 +252,7 @@ class AbstractSpider(object):
 
             if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData and "publishAt" not in listData:
                 autoDetailData["publishAt"] = TimeUtils.get_conent_time(html)
-            if contentAutoData is None and (("title" not in detailData and "title" not in listData) or StringUtils.isEmpty(pageContent)):
+            if contentAutoData is None and (("title" not in detailData and "title" not in listData) or (StringUtils.isEmpty(pageContent)) and pageContentImages is None):
                 contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber,html, enableDownloadImage, enableSnapshot)
             ArticleUtils.mergeNewDict(autoDetailData, contentAutoData)
 
