@@ -25,6 +25,10 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         'http://bxjg.circ.gov.cn/web/site0/tab5241/',
         'http://www.szse.cn/lawrules/service/servicedirect/t20181228_565063.html'
     ]
+    restrictContentTitle = [
+        'http://www.gzcz.gov.cn',
+        'http://www.gzdpc.gov.cn'
+    ]
 
     def __init__(self, name=None, **kwargs):
         scrapy.Spider.__init__(self, name=name, kwargs=kwargs)
@@ -50,7 +54,11 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if not ArticleUtils.isSameSite(start_url,url):
                 continue
             metaCopy = meta.copy()
-            metaCopy['anchorText'] = ArticleUtils.clearListTitle(link_list[url][0])
+            for resUrl in self.restrictContentTitle:
+                if ArticleUtils.isSameSite(resUrl, start_url):
+                    metaCopy['anchorText'] = ''
+                else:
+                    metaCopy['anchorText'] = ArticleUtils.clearListTitle(link_list[url][0])
             metaCopy['anchorTime'] = link_list[url][1]
             metaCopy['parse'] = 'detail'
             metaCopy["contentPageNumber"] = 1
@@ -194,7 +202,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         @return：urls
         '''
         listList = []  # 列表的列表
-        fibbden = [10.375, 10.1875]  # 禁用的，重构后用静态
+        fibbdenchars =[10.375,10.1875,16.5] # 禁用的字数，重构后用静态
+        fibbdenwords =[6.0] # 禁用的词数，重构后用静态
         maxLength = 0
         maxName = ''
         for father_node in href_parent.keys():
@@ -211,7 +220,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 print(text.strip(), '|', href)
             # 记录max
             if (child_total_length / child_count) > maxLength and child_count != 1 and (
-                    child_total_length / child_count) not in fibbden:
+                    child_total_length / child_count) not in fibbdenchars:
                 maxLength = child_total_length / child_count
                 maxName = father_node
             print(father_node, child_count, child_total_length / child_count, word_count / child_count)
