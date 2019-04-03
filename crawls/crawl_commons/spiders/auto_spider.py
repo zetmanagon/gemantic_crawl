@@ -171,7 +171,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         minNumZero = [
             'http://www.gzcz.gov.cn',
             'http://www.gzdpc.gov.cn'
-                ]
+        ]
         print('*******************************************')
         print(starturl)
         '''
@@ -191,14 +191,23 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if ArticleUtils.isSameSite(resUrl, starturl):
                 onlyFlag = False
                 minNum = 0
-        final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=False)
+        # print(onlyFlag+minNum)
+        final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=False, minNum = minNum)
         print('过滤后的链接数目', len(final_urls))
         if len(final_urls) == 0:
-            final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=True)
+            final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=True, minNum = minNum)
             print('max过滤后的链接数目', len(final_urls))
         return final_urls
 
-    def listFilter(self, href_parent, averageLength, averageWordCounts, only, max):
+    def removeNum(self,str):
+        '''
+        去除字符串里面的数字
+        '''
+        a = filter(lambda x: x.isalpha(), list(str))
+        b=list(a)
+        return ''.join(b)
+
+    def listFilter(self, href_parent, averageLength, averageWordCounts, only, max, minNum):
         '''
         列表筛选
         @
@@ -209,8 +218,13 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         @return：urls
         '''
         listList = []  # 列表的列表
-        fibbdenchars =[10.375,10.1875,16.5] # 禁用的字数，重构后用静态
-        fibbdenwords =[6.0] # 禁用的词数，重构后用静态
+        fibbdenchars =[10.375,10.1875] # 禁用的字数，重构后用静态
+        fibbdentree =[r"lifloatleftwidthpxulwidthpxpositionrelativeoverflowhiddenpaddingpxmarginpxleftpxdivtempWrapdivzytsnrdivzytsdivnavbodyNonehtmlhttpwwwworgxhtml",
+        r"spanfloatleftheightpxlineheightpxpaddingrightpxdivwidthpxheightpxmarginautopaddingdivfrdivdibxxdivfootbodyNonehtmlhttpwwwworgxhtml",
+        "tdtoptrNonetbodyNonetabletdmiddletrNonetbodyNonetablemarginautodivmainfootbodyNonehtmlhttpwwwworgxhtml",
+        "hheightpxlineheightpxpaddingtoppxlifixcurulfixewmdivfixedboxbodyNonehtmlhttpwwwworgxhtml",
+        "spancnzzstaticonpdisplaynonedivsyqtdivfooterbodyNonehtmlhttpwwwworgxhtml"]
+        allowedtree =[r"liNoneulNonedivxxlbdivfrdivcontentbodyNonehtmlhttpwwwworgxhtml"]
         maxLength = 0
         maxName = ''
         for father_node in href_parent.keys():
@@ -225,16 +239,21 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 word_count += len(" ".join(jieba.cut(text.strip())).split(" "))
                 # 链接描述平均字数和次数都大于阈值
                 print(text.strip(), '|', href)
+            averageChildLength = child_total_length / child_count
+            averageChildWords = word_count / child_count
             # 记录max
-            if (child_total_length / child_count) > maxLength and child_count != 1 and (
-                    child_total_length / child_count) not in fibbdenchars:
+            if (averageChildLength) > maxLength and child_count != 1 and (
+                    averageChildLength) not in fibbdenchars:
                 maxLength = child_total_length / child_count
                 maxName = father_node
-            print(father_node, child_count, child_total_length / child_count, word_count / child_count)
-            if child_total_length / child_count > averageLength and word_count / child_count > averageWordCounts and child_count > 1:
-                if not (child_total_length / child_count in fibbdenchars and word_count / child_count in fibbdenwords):
+            print(father_node, child_count, averageChildLength, averageChildWords)
+            # print(self.removeNum(father_node) in allowedtree)
+            # print(self.removeNum(father_node) == fibbdentree[0])
+            # print(self.removeNum(father_node))
+            # print(self.removeNum(fibbdentree[0]))
+            if (averageChildLength > averageLength and averageChildWords > averageWordCounts and child_count > minNum) or self.removeNum(father_node) in allowedtree:
+                if self.removeNum(father_node) not in fibbdentree:
                     print("ture")
-
                     for _, text, _, href, time in href_parent[father_node]:
                         urls[href] = [text, time]
                     listList.append(urls)
