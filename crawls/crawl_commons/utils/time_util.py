@@ -80,12 +80,14 @@ class TimeUtils(object):
         return int(time.time()*1000)
 
     @classmethod
-    def get_conent_time(cls, html):
+    def get_conent_time(cls, html, index):
         '''
         提取时间,并转化为时间戳
-        @param response
+        @param html ：网页
+        @param index ：是否强制使用第index个时间，-1为自动识别
         @return 时间戳
         '''
+        print(html)
         link_list = re.findall(
             r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",
             html)
@@ -102,7 +104,11 @@ class TimeUtils(object):
             except OverflowError:
                 timMill = 0
             timelist.append(timMill)
-        # timelist.sort()
+        if index != -1 and len(timelist) > index:
+            return timelist[index]
+        else:
+            while 0 in timelist:
+                timelist.remove(0)
         for timMill in timelist:  # 取最新的时间
             if TimeUtils.getNowMill() - timMill > 86400000:  # 时间如果大于24小时，直接用
                 return timMill
