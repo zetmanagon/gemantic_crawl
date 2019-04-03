@@ -113,7 +113,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if 'anchorTime' in meta and meta['anchorTime'] > 0:
                 detailData["publishAt"] = meta['anchorTime']
             if "publishAt" not in detailData:
-                detailData["publishAt"] = TimeUtils.get_conent_time(ArticleUtils.removeTag4Content(html))
+                detailData["publishAt"] = TimeUtils.get_conent_time(html,0)
             # if detailData["publishAt"] == '':
             #     ts = time.strptime(meta["timestamp"], "%Y-%m-%d %H-%M-%S")
             #     ts = int(time.mktime(ts)) * 1000
@@ -168,6 +168,10 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             yield item
 
     def get_list_urls(self, starturl, response):
+        minNumZero = [
+            'http://www.gzcz.gov.cn',
+            'http://www.gzdpc.gov.cn'
+                ]
         print('*******************************************')
         print(starturl)
         '''
@@ -182,8 +186,11 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
 
         href_parent = self.getSameParent(starturl, a_tags, fine=False)
         onlyFlag =True
-        if ArticleUtils.isSameSite('http://www.gzcz.gov.cn', starturl):
-            onlyFlag = False
+        minNum = 1
+        for resUrl in minNumZero:
+            if ArticleUtils.isSameSite(resUrl, starturl):
+                onlyFlag = False
+                minNum = 0
         final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=False)
         print('过滤后的链接数目', len(final_urls))
         if len(final_urls) == 0:
@@ -225,11 +232,12 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 maxName = father_node
             print(father_node, child_count, child_total_length / child_count, word_count / child_count)
             if child_total_length / child_count > averageLength and word_count / child_count > averageWordCounts and child_count > 1:
-                print("ture")
+                if not (child_total_length / child_count in fibbdenchars and word_count / child_count in fibbdenwords):
+                    print("ture")
 
-                for _, text, _, href, time in href_parent[father_node]:
-                    urls[href] = [text, time]
-                listList.append(urls)
+                    for _, text, _, href, time in href_parent[father_node]:
+                        urls[href] = [text, time]
+                    listList.append(urls)
         print('-------------------------------')
         final_list = dict()
         if max is True:
@@ -287,7 +295,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 time = time + t
             # print(time)
             # print('*'*20)
-            time = TimeUtils.get_conent_time(time)
+            time = TimeUtils.get_conent_time(time,0)
             # print (time)
 
             # 获取父节点
