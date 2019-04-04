@@ -555,7 +555,7 @@ class ArticleUtils(object):
             return StringUtils.trim(headTitle.split("_")[0])
         if "--" in headTitle and len(StringUtils.trim(headTitle.split("--")[0])) >=5:
             return StringUtils.trim(headTitle.split("--")[0])
-        return headTitle
+        return ArticleUtils.removeAllTag(headTitle)
 
     @classmethod
     def isErrorUrl(cls, url):
