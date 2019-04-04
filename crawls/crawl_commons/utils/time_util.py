@@ -87,7 +87,7 @@ class TimeUtils(object):
         @param index ：是否强制使用第index个时间，-1为自动识别
         @return 时间戳
         '''
-        print(html)
+        # print(html)
         link_list = re.findall(
             r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",
             html)
