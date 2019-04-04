@@ -552,10 +552,10 @@ class ArticleUtils(object):
     @classmethod
     def cleanHeadTitle(cls, headTitle):
         if "_" in headTitle and len(StringUtils.trim(headTitle.split("_")[0])) >= 5:
-            return StringUtils.trim(headTitle.split("_")[0])
+            return StringUtils.trim(ArticleUtils.removeAllTag(headTitle.split("_")[0]))
         if "--" in headTitle and len(StringUtils.trim(headTitle.split("--")[0])) >=5:
-            return StringUtils.trim(headTitle.split("--")[0])
-        return ArticleUtils.removeAllTag(headTitle)
+            return StringUtils.trim(ArticleUtils.removeAllTag(headTitle.split("--")[0]))
+        return StringUtils.trim(ArticleUtils.removeAllTag(headTitle))
 
     @classmethod
     def isErrorUrl(cls, url):
