@@ -31,6 +31,8 @@ class ArticleUtils(object):
 
     ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|请用新域名访问|BadGateway|BadRequest|ErrorPage).*')
 
+    ERROR_URL_PATTERN = re.compile(u'^((?!www.gov.cn/zhuanti/|www.china.com.cn/zhibo/).)*$')
+
     @classmethod
     def removeTag4Content(cls, str):
         if str is None:
@@ -120,9 +122,9 @@ class ArticleUtils(object):
     @classmethod
     def getDomain(cls, url):
         site = ArticleUtils.getSite(url)
-        print(site)
+        # print(site)
         siteArr = site.split(".")
-        print(len(siteArr))
+        # print(len(siteArr))
         if len(siteArr)<= 3:
             return site
         return ".".join(siteArr[-3:])
@@ -550,7 +552,15 @@ class ArticleUtils(object):
     @classmethod
     def cleanHeadTitle(cls, headTitle):
         if "_" in headTitle and len(StringUtils.trim(headTitle.split("_")[0])) >= 5:
-            return StringUtils.trim(headTitle.split("_")[0])
+            return StringUtils.trim(ArticleUtils.removeAllTag(headTitle.split("_")[0]))
         if "--" in headTitle and len(StringUtils.trim(headTitle.split("--")[0])) >=5:
-            return StringUtils.trim(headTitle.split("--")[0])
-        return headTitle
+            return StringUtils.trim(ArticleUtils.removeAllTag(headTitle.split("--")[0]))
+        return StringUtils.trim(ArticleUtils.removeAllTag(headTitle))
+
+    @classmethod
+    def isErrorUrl(cls, url):
+        if url is None:
+            return True
+        if ArticleUtils.ERROR_URL_PATTERN.match(url) is not None:
+            return False
+        return True

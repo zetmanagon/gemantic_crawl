@@ -95,7 +95,9 @@ class TimeUtils(object):
         @return 时间戳
         '''
         # print(html)
-        link_list = re.findall(r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",html)
+        link_list = re.findall(
+            r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",
+            html)
         timMill = None
         timelist = []
         timeAtLine = ''

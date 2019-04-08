@@ -101,6 +101,8 @@ class AbstractSpider(object):
             if not isVaildUrl:
                 continue
             targetUrl = ArticleUtils.getFullUrl(detailUrl, response.url)
+            if ArticleUtils.isErrorUrl(targetUrl):
+                continue
             if depthNumber == 0:
                 targetUrl = ArticleUtils.getFullUrl(detailUrl, seed.url)
             self.LOG.info("isDetail %s targetUrl %s" % (str(isDetail), targetUrl))
@@ -167,6 +169,9 @@ class AbstractSpider(object):
         regexList = meta["seedRegex"]
         regexDict = regexList[-1].regexDict
         seed = meta["seedInfo"]
+        listData = {}
+        if "listData" in meta:
+            listData = meta["listData"]
         enableDownloadFile = False
         enableDownloadImage = False
         enableSnapshot = False
@@ -225,14 +230,16 @@ class AbstractSpider(object):
                         contentData["contentSnapshot"] = contentSnapshots[0]
                         # ArticleUtils.mergeDict(detailData,"contentSnapshot",contentSnapshots[0])
 
-        if StringUtils.isEmpty(pageContent):
+        if StringUtils.isEmpty(pageContent) and pageContentImages is None:
             if contentAutoData is None:
                 contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber, html, enableDownloadImage,enableSnapshot)
+            if "contentImages" in contentAutoData:
+                pageContentImages = contentAutoData["contentImages"]
             if "content" in contentAutoData:
                 pageContent = ArticleUtils.removeAllTag(contentAutoData["content"])
 
 
-        if StringUtils.isEmpty(pageContent) and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
+        if StringUtils.isEmpty(pageContent) and pageContentImages is None and nocontentRender == 1 and not ArticleUtils.isRender(meta, self.name):
             metaCopy = meta.copy()
             metaCopy["renderType"] = 1
             metaCopy["renderSeconds"] = 5
@@ -245,9 +252,9 @@ class AbstractSpider(object):
         else:
             ArticleUtils.mergeNewDict(detailData, contentData)
 
-            if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData:
-                autoDetailData["publishAt"] = TimeUtils.get_conent_time(html)
-            if contentAutoData is None and ("title" not in detailData or StringUtils.isEmpty(pageContent)):
+            if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData and "publishAt" not in listData:
+                autoDetailData["publishAt"] = TimeUtils.get_conent_time(html,-1)
+            if contentAutoData is None and (("title" not in detailData and "title" not in listData) or (StringUtils.isEmpty(pageContent)) and pageContentImages is None):
                 contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber,html, enableDownloadImage, enableSnapshot)
             ArticleUtils.mergeNewDict(autoDetailData, contentAutoData)
 
