@@ -217,6 +217,65 @@ class ArticleUtils(object):
         return result
 
     @classmethod
+    def getJsonContent(cls, response):
+        '''
+        从response中获得json数据，暂时以学习强国为模板
+        @response
+        @return 有用的包含json的字串
+        '''
+        regexfieldsrawdata = response.text
+        size = len(regexfieldsrawdata)
+
+        count_leftbarckets = 0  # regexfieldsrawdata数据中'['的个数
+        count_rightbrackets = count_leftbarckets    # regexfieldsrawdata数据中']'的个数
+
+        index_leftbrackets = -1 # 用来记录regexfieldsrawdata中第一个'['的位置
+        index_rightbrackets = -1    # 用来记录regexfieldsrawdata中第一个'['对应']'的位置
+
+        for i in range(size):
+            if regexfieldsrawdata[i] == '[':
+                count_leftbarckets = count_leftbarckets + 1
+                count_rightbrackets = count_leftbarckets 
+                if count_leftbarckets == 1:
+                    index_leftbrackets = i 
+        for i in range(size):
+            if regexfieldsrawdata[i] == ']':
+                count_rightbrackets = count_rightbrackets - 1
+            if count_rightbrackets == 1:
+                index_rightbrackets = i
+        # 如果遍历完成后，index_leftbrackets保持不变，说明jsonrawdata中没有'['
+        if index_leftbrackets == -1:
+            print('No regexfields')
+        regexfields = regexfieldsrawdata[index_leftbrackets : index_rightbrackets + 2]
+        if regexfields[0] == '[' and regexfields[-1] == ']':
+            return regexfields
+        else:
+            return ''
+
+    @classmethod
+    def getResponseJsonFieldValue(cls,regexField, webRegexs, jsdata):
+        '''
+        json按规则取元素
+        @regexField:区域名
+        @webRegexs：对应规则
+        @response
+        @starturl:种子链接
+        return：该区域内容
+        '''
+        result = []
+        jsdata = json.loads(jsdata)
+        for regexfield_temp in jsdata:
+            for webRegex in webRegexs.regex_content:
+                regexfield_temp = regexfield_temp[webRegex]
+            if "content" == regexField or "contentSnapshot" == regexField:
+                #  暂时这么写，正文估计用不着json提取
+                contentResponse = ArticleUtils.getResponseContents4ContentRegex(webRegexs,jsdata)
+            # if "list" == regexField and  'http' not in regexfield_temp:
+            #     regexfield_temp = urljoin(starturl, regexfield_temp)
+            result.append(regexfield_temp)
+        return result
+
+    @classmethod
     def getFormatContent(cls, field,content,formatter):
         formatContent = None
         if "content" == field:

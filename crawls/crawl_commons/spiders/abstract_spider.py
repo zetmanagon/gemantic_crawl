@@ -74,21 +74,34 @@ class AbstractSpider(object):
         seed = meta["seedInfo"]
         depthNumber = int(meta["depthNumber"])
         regexDict = regexList[depthNumber].regexDict
+        jsdata = ''
         if pageNumber <=1 and self.isStat:
             html = "".join(response.xpath("//html").extract())
             self.crawlDB.saveCrawlStat(seed.url,self.crawlId,self.crawlName, meta["timestamp"], "list",html,depthNumber)
         if "list" not in regexDict:
             self.log("%s no list regex" % response.url)
             yield
+        if regexDict['list'][-1].regex_type == 'json':
+            jsdata = ArticleUtils.getJsonContent(response)
+            if jsdata == '':
+                self.log("%s no json regex failed" % response.url)
         listRegexs = regexDict["list"]
         # domain = meta["seedInfo"].domain
-        detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
         listDataAll = {}
-        for (k, v) in regexDict.items():
-            if "nextPage" == k or "list" == k:
-                continue
-            itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
-            listDataAll[k] = itemValues
+        if jsdata == '':
+            detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
+            for (k, v) in regexDict.items():
+                if "nextPage" == k or "list" == k:
+                    continue
+                itemValues = ArticleUtils.getJsonContent(k, False, v, response)
+                listDataAll[k] = itemValues
+        else:
+            detailUrls = ArticleUtils.getResponseJsonFieldValue('list',listRegexs,jsdata)
+            for (k, v) in regexDict.items():
+                if "nextPage" == k or "list" == k:
+                    continue
+                itemValues = ArticleUtils.getResponseFieldValue(k, v, jsdata)
+                listDataAll[k] = itemValues
         listRegex = listRegexs[-1]
 
         isDetail = True
@@ -125,6 +138,10 @@ class AbstractSpider(object):
             metaCopy["renderType"] = listRegex.renderType
             metaCopy["pageRenderType"] = listRegex.pageRenderType
             metaCopy["renderSeconds"] = listRegex.renderSeconds
+            if 'publishAt' in listData:
+                metaCopy["anchorTime"] = listData['publishAt']
+            if 'title' in listData:
+                metaCopy["anchorText"] = listData['title']
             # metaCopy["renderBrowser"] = listRegex.renderBrowser
             if ArticleUtils.isFile(targetUrl):
                 self.crawlDB.saveFileCrawlDetail(metaCopy, targetUrl)
