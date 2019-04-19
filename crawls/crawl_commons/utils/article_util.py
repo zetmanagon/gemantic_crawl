@@ -265,14 +265,16 @@ class ArticleUtils(object):
         result = []
         jsdata = json.loads(jsdata)
         for regexfield_temp in jsdata:
-            for webRegex in webRegexs.regex_content:
+            for webRegex in webRegexs.regexContent:
                 regexfield_temp = regexfield_temp[webRegex]
-            if "content" == regexField or "contentSnapshot" == regexField:
+                if "content" == regexField or "contentSnapshot" == regexField:
                 #  暂时这么写，正文估计用不着json提取
-                contentResponse = ArticleUtils.getResponseContents4ContentRegex(webRegexs,jsdata)
+                    contentResponse = ArticleUtils.getResponseContents4ContentRegex(webRegexs,jsdata)
+                if "publishAt" == regexField:
+                    regexfield_temp = TimeUtils.convert2Mill4Default(regexfield_temp)
             # if "list" == regexField and  'http' not in regexfield_temp:
             #     regexfield_temp = urljoin(starturl, regexfield_temp)
-            result.append(regexfield_temp)
+                result.append(regexfield_temp)
         return result
 
     @classmethod

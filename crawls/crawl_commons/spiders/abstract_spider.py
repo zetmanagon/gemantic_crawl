@@ -52,7 +52,7 @@ class AbstractSpider(object):
                 self.LOG.infog("%s no regex" % seed.url)
                 continue
             if self.isStat:
-                self.crawlDB.saveCrawlStat(seed.url,self.crawlId,self.crawlName, timestamp,"detail")  # 初始化种子统计
+                self.crawlDB.saveCrawlStat(seed.url, self.crawlId, self.crawlName, timestamp,"detail")  # 初始化种子统计
             meta = {}
             meta["timestamp"] = timestamp
             meta["seedRegex"] = regex
@@ -81,26 +81,27 @@ class AbstractSpider(object):
         if "list" not in regexDict:
             self.log("%s no list regex" % response.url)
             yield
-        if regexDict['list'][-1].regex_type == 'json':
+        if regexDict['list'][-1].regexType == 'json':
             jsdata = ArticleUtils.getJsonContent(response)
             if jsdata == '':
                 self.log("%s no json regex failed" % response.url)
         listRegexs = regexDict["list"]
         # domain = meta["seedInfo"].domain
         listDataAll = {}
-        if jsdata == '':
-            detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
-            for (k, v) in regexDict.items():
-                if "nextPage" == k or "list" == k:
-                    continue
-                itemValues = ArticleUtils.getJsonContent(k, False, v, response)
-                listDataAll[k] = itemValues
-        else:
+        detailUrls = []
+        if regexDict['list'][-1].regexType == 'json':
             detailUrls = ArticleUtils.getResponseJsonFieldValue('list',listRegexs,jsdata)
             for (k, v) in regexDict.items():
                 if "nextPage" == k or "list" == k:
                     continue
-                itemValues = ArticleUtils.getResponseFieldValue(k, v, jsdata)
+                itemValues = ArticleUtils.getResponseJsonFieldValue(k, v, jsdata)
+                listDataAll[k] = itemValues
+        else:
+            detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
+            for (k, v) in regexDict.items():
+                if "nextPage" == k or "list" == k:
+                    continue
+                itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
                 listDataAll[k] = itemValues
         listRegex = listRegexs[-1]
 
