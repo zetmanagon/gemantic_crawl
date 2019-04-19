@@ -265,7 +265,8 @@ class ArticleUtils(object):
         result = []
         jsdata = json.loads(jsdata)
         for regexfield_temp in jsdata:
-            for webRegex in webRegexs.regexContent:
+            for _webRegex in webRegexs:
+                webRegex = _webRegex.regexContent
                 regexfield_temp = regexfield_temp[webRegex]
                 if "content" == regexField or "contentSnapshot" == regexField:
                 #  暂时这么写，正文估计用不着json提取
