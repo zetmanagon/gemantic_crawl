@@ -80,16 +80,45 @@ class AbstractSpider(object):
         if "list" not in regexDict:
             self.log("%s no list regex" % response.url)
             yield
+
         listRegexs = regexDict["list"]
-        # domain = meta["seedInfo"].domain
-        detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
-        listDataAll = {}
-        for (k, v) in regexDict.items():
-            if "nextPage" == k or "list" == k:
-                continue
-            itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
-            listDataAll[k] = itemValues
         listRegex = listRegexs[-1]
+        json_data = None
+        if listRegex.regexType == 'json':
+            json_data = ArticleUtils.getJsonContent(response)
+            if StringUtils.isEmpty(json_data):
+                self.log("%s no json regex failed" % response.url)
+                yield
+        # domain = meta["seedInfo"].domain
+        # detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
+        detailUrls = None
+        listDataAll = {}
+        # for (k, v) in regexDict.items():
+        #     if "nextPage" == k or "list" == k:
+        #         continue
+        #     itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
+        #     listDataAll[k] = itemValues
+
+
+        if json_data is None:
+            detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
+            for (k, v) in regexDict.items():
+                if "nextPage" == k or "list" == k:
+                    continue
+                itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
+                listDataAll[k] = itemValues
+        else:
+            detailUrls = ArticleUtils.getResponseJsonFieldValue(listRegex.regexField, listRegexs, json_data)
+            for (k, v) in regexDict.items():
+                if "nextPage" == k or "list" == k:
+                    continue
+                itemValues = ArticleUtils.getResponseJsonFieldValue(k, v, json_data)
+                listDataAll[k] = itemValues
+
+        if detailUrls is None or len(detailUrls)<=0:
+            self.log("no detailUrls %s " % response.url)
+            yield
+
 
         isDetail = True
         if depthNumber + 1 < regexList[-1].depthNumber:
