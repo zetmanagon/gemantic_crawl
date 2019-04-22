@@ -45,7 +45,9 @@ class AbstractSpider(object):
         timestamp = time.strftime('%Y-%m-%d %H-%M-%S', time.localtime(time.time()))  # 该次爬虫的时间戳
         # 定义爬取的链接
         for seed in seeds:
-            # if seed.url != 'http://www.gzdpc.gov.cn/zwgk/xxgkml/zdlyxx_81482/zdxm_81483/xmsp/':
+            # if seed.url != 'https://www.xuexi.cn/c06bf4acc7eef6ef0a560328938b5771/data9a3668c13f6e303932b5e0e100fc248b.js':
+            #     continue
+            # if 'xuexi' not in seed.url:
             #     continue
             regex = self.seedDB.get_regex(seed.regexName)
             if isRegex and (regex is None or len(regex)<=0):
@@ -60,6 +62,7 @@ class AbstractSpider(object):
             meta["pageNumber"] = 1
             meta["seedInfo"] = seed
             meta["renderType"] = seed.renderType
+            # meta["renderType"] = 0
             meta["pageRenderType"] = seed.pageRenderType
             meta["renderSeconds"] = seed.renderSeconds
             meta["nocontentRender"] = seed.nocontentRender
@@ -89,6 +92,8 @@ class AbstractSpider(object):
         # domain = meta["seedInfo"].domain
         listDataAll = {}
         detailUrls = []
+        # self.log(response.text)
+        # self.log(regexDict['list'][-1])
         if regexDict['list'][-1].regexType == 'json':
             detailUrls = ArticleUtils.getResponseJsonFieldValue('list',listRegexs,jsdata)
             for (k, v) in regexDict.items():
@@ -104,7 +109,8 @@ class AbstractSpider(object):
                 itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
                 listDataAll[k] = itemValues
         listRegex = listRegexs[-1]
-
+        # print(detailUrls)
+        # self.log(itemValues)
         isDetail = True
         if depthNumber + 1 < regexList[-1].depthNumber:
             isDetail = False

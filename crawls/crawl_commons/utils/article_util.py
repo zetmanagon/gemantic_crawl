@@ -223,7 +223,8 @@ class ArticleUtils(object):
         @response
         @return 有用的包含json的字串
         '''
-        regexfieldsrawdata = response.text
+        regexfieldsrawdata = "".join(response.xpath("//html").extract())
+        # print(regexfieldsrawdata)
         size = len(regexfieldsrawdata)
 
         count_leftbarckets = 0  # regexfieldsrawdata数据中'['的个数
@@ -272,7 +273,7 @@ class ArticleUtils(object):
                 #  暂时这么写，正文估计用不着json提取
                     contentResponse = ArticleUtils.getResponseContents4ContentRegex(webRegexs,jsdata)
                 if "publishAt" == regexField:
-                    regexfield_temp = TimeUtils.convert2Mill4Default(regexfield_temp)
+                    regexfield_temp = TimeUtils.convert2Mill4Default(regexfield_temp, "", True)
             # if "list" == regexField and  'http' not in regexfield_temp:
             #     regexfield_temp = urljoin(starturl, regexfield_temp)
                 result.append(regexfield_temp)
