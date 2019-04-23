@@ -22,6 +22,7 @@ class AbstractSpider(object):
     def __init__(self,crawl_name):
         self.LOG = logging.getLogger("abstractSpider")
         self.spiderName = crawl_name
+        self.json_new_max_size = 30
         self.crawlName = crawl_name.replace("history_", "")
         self.isHistory = ArticleUtils.isHistory(self.spiderName)
         self.isStat = ArticleUtils.isStat(self.spiderName)
@@ -119,11 +120,13 @@ class AbstractSpider(object):
             self.log("no detailUrls %s " % response.url)
             yield
 
-
         isDetail = True
         if depthNumber + 1 < regexList[-1].depthNumber:
             isDetail = False
         for i, detailUrl in enumerate(detailUrls):
+            #json数据解析，当前页只读取前30条记录
+            if isDetail and not self.isHistory and json_data is not None and i >= self.json_new_max_size:
+                break
             isVaildUrl = True
             if StringUtils.isNotEmpty(listRegex.resultFilterRegex):
                 isVaildUrl = re.match(listRegex.resultFilterRegex, detailUrl)
