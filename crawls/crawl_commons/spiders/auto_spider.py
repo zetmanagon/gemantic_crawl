@@ -170,7 +170,10 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
     def get_list_urls(self, starturl, response):
         minNumZero = [
             'http://www.gzcz.gov.cn',
-            'http://www.gzdpc.gov.cn'
+            'http://www.gzdpc.gov.cn',
+            'http://www.gzdis.gov.cn',
+            'http://www.anshun.gov.cn',
+            'guizhou.gov.cn'
         ]
         print('*******************************************')
         print(starturl)
@@ -223,8 +226,26 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         r"spanfloatleftheightpxlineheightpxpaddingrightpxdivwidthpxheightpxmarginautopaddingdivfrdivdibxxdivfootbodyNonehtmlhttpwwwworgxhtml",
         "tdtoptrNonetbodyNonetabletdmiddletrNonetbodyNonetablemarginautodivmainfootbodyNonehtmlhttpwwwworgxhtml",
         "hheightpxlineheightpxpaddingtoppxlifixcurulfixewmdivfixedboxbodyNonehtmlhttpwwwworgxhtml",
-        "spancnzzstaticonpdisplaynonedivsyqtdivfooterbodyNonehtmlhttpwwwworgxhtml"]
-        allowedtree =[r"liNoneulNonedivxxlbdivfrdivcontentbodyNonehtmlhttpwwwworgxhtml"]
+        "spancnzzstaticonpdisplaynonedivsyqtdivfooterbodyNonehtmlhttpwwwworgxhtml"
+        "liNoneuldiyselectlistdivselectlistdivdiyselectformNonedivconselectdivlinkdivMaindivwarpbodyNonehtmlNone", # 安顺
+        "liNoneuldiyselectlistdivselectlistdivdiyselectformNonedivconselectdivlinkdivFooterautomtdivwarpbodyScrollStylehtmlNone", 
+        "pNonedivfootTexBoxfldivwBoxautotransitiondofdivFooterautomtdivwarpbodyScrollStylehtmlNone",#  贵州监察
+        "divNonedivztdivnavnrdivnavboxdivnavldivleftleftboxdivcontaindivcontainerbodyNonehtmlhttpwwwworgxhtml",
+        "divNonedivContentlistsdivContentlistsdivContentlistdivzpdivnavnrdivnavboxdivnavldivleftleftboxdivcontaindivcontainerbodyNonehtmlhttpwwwworgxhtml",
+        "divNonedivContentlistdivzpdivnavnrdivnavboxdivnavldivleftleftboxdivcontaindivcontainerbodyNonehtmlhttpwwwworgxhtml",
+        "divNonedivContentlistsdivContentlistdivzpdivnavnrdivnavboxdivnavldivleftleftboxdivcontaindivcontainerbodyNonehtmlhttpwwwworgxhtml", #  安徽省
+        "pNonedivNonedivlefttextdivfootercondivfooterdivwarpbodyNonehtmlNone",
+        "liNoneulNonedivqggdgbcxcondivleftcondivmaincdivmaindivwarpbodyNonehtmlNone", #  贵州省政府公报
+        "liNoneulNonedivyqljcondivlinkdivfooterbodyNonehtmlhttpwwwworgxhtml" #  贵州省商务厅
+        "liNoneuldiyselectlistdivselectlistdivdiyselectformNonedivconselectdivlinkdivMaindivwarpbodyNonehtmlNone" #安顺人民政府
+        ]
+        allowedtree =[r"liNoneulNonedivxxlbdivfrdivcontentbodyNonehtmlhttpwwwworgxhtml",
+        "ulNonedivbddivgbslideTxtBoxdivleftleftBoxdivmainBoxbodyNonehtmlzhCN", #  宁夏
+        "liNonedivgbqsdivrightcondivmaincdivmaindivwarpbodyNonehtmlNone", #  贵州省政府公报
+        "tdfffffftrNonetabletdtrNonetbodyNonetabledivmainbodybackgroundurlTMPimagesbodybgjpgcentertoprepeatyfffhtmlhttpwwwworgxhtml", #  安徽省人民政府公报
+        "liNoneulNonedivNewsListdivybnrfrdivmaindivMainwBoxautodivwarpbodyScrollStylehtmlNone", #  http://www.gzdis.gov.cn/djfg/dnfgzd/dz/
+        "liNoneulNonedivNewsListdivybnrfrdivtabcondivzxmenucondivMaindivwarpbodyNonehtmlNone" # 安顺幼儿园
+        ]
         maxLength = 0
         maxName = ''
         for father_node in href_parent.keys():
@@ -289,9 +310,12 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             href = a_tag.xpath('@href').extract_first()
             if href is None:
                 continue
+            if 'javascript:openUrl' in href:
+                # print(href)
+                href = href.split('(')[1].strip(')').strip('\'')
 
             # 获取a标题文本内容，无内容的链接不抓取
-            texts = a_tag.xpath('text()').extract()
+            texts = a_tag.xpath('text()|@title|li/text()').extract()
             text = ''
             for t in texts:
                 text = text + t
@@ -362,7 +386,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         ''' 中国政府网适配 '''
         if str(xpath) == 'line':
             return 'None'
-        return str(xpath)
+        return self.removeNum(str(xpath))
 
     def closed(self, reason):
         self.do_closed(reason)
