@@ -121,6 +121,7 @@ class AbstractSpider(object):
         isDetail = True
         if depthNumber + 1 < regexList[-1].depthNumber:
             isDetail = False
+        detailUrlsLength = len(detailUrls)
         for i, detailUrl in enumerate(detailUrls):
             #json数据解析，当前页只读取前30条记录
             if isDetail and not self.isHistory and json_data is not None and i >= self.json_new_max_size:
@@ -143,11 +144,12 @@ class AbstractSpider(object):
             if "listData" in meta and len(meta["listData"]) > 0:
                 listData = meta["listData"]
             for (k, v) in listDataAll.items():
-                if v is not None and i < len(v) and v[i] is not None and StringUtils.isNotEmpty(str(v[i])):
-                    listDataValue = v[i]
-                    if "category" == k and k in listData:
-                        listDataValue = listData["category" + "/" + listDataValue]
-                    listData[k] = listDataValue
+                if v is None or len(v) != detailUrlsLength or v[i] is None or StringUtils.isEmpty(str(v[i])):
+                    continue
+                listDataValue = v[i]
+                if "category" == k and k in listData:
+                    listDataValue = listData["category" + "/" + listDataValue]
+                listData[k] = listDataValue
             metaCopy["listData"] = listData
             metaCopy["contentPageNumber"] = 1
             metaCopy["depthNumber"] = depthNumber + 1
