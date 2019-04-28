@@ -99,8 +99,6 @@ class AbstractSpider(object):
         #         continue
         #     itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
         #     listDataAll[k] = itemValues
-
-
         if json_data is None:
             detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
             for (k, v) in regexDict.items():
@@ -226,6 +224,7 @@ class AbstractSpider(object):
 
         contentAutoData = None
         html = "".join(response.xpath("//html").extract())
+        html_body = ArticleUtils.removeAllTag("".join(response.xpath("//html//body").extract()))
         meta["autoDetailData"] = autoDetailData
         maxPageNumber = 0
         pageContent = ""
@@ -285,7 +284,7 @@ class AbstractSpider(object):
             ArticleUtils.mergeNewDict(detailData, contentData)
 
             if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData and "publishAt" not in listData:
-                autoDetailData["publishAt"] = TimeUtils.get_conent_time(html,-1)
+                autoDetailData["publishAt"] = TimeUtils.get_conent_time(html_body,-1)
             if contentAutoData is None and (("title" not in detailData and "title" not in listData) or (StringUtils.isEmpty(pageContent)) and pageContentImages is None):
                 contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber,html, enableDownloadImage, enableSnapshot)
             ArticleUtils.mergeNewDict(autoDetailData, contentAutoData)

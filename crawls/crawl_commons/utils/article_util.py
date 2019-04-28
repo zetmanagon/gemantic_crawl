@@ -26,7 +26,7 @@ class ArticleUtils(object):
     MERGE_FIELD = ["content","contentImages","contentFiles","contentSnapshot"]
     PAGE_CONTENT = [">上页<", ">上一页<", ">下页<", ">下一页<",">末页<",">尾页<",">首页<",">前一页<",">后一页<"]
     COMMON_NEXT_PAGE_REGEX = [WebRegex({"regexType":"xpath","regexField":"nextPage", "regexContent":'//a[contains(text(),"下一页") or contains(text(),"下页") or contains(text(),"后一页")]//@href',"resultFormat":"","pageRenderType":0,"renderSeconds":"0","renderType":"0","renderBrowser":"","regexSort":"0","depthNumber" :"0","resultFilterRegex":"","maxPageNumber":"0"})]
-    ERROR_PAGE_PATTERN = re.compile(u'.*?(404|服务器错误|页面找不到|页面没有找到|no-title).*')
+    ERROR_PAGE_PATTERN = re.compile(u'.*?(404|服务器错误|状态页面|页面找不到|页面没有找到|no-title).*')
     ERROR_PAGE_TITLE_PATTERN = re.compile(u'.*?(首页|末页|上一页|下一页|上页|下页|尾页|后一页|前一页).*')
 
     ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|请用新域名访问|BadGateway|BadRequest|ErrorPage).*')
@@ -37,7 +37,7 @@ class ArticleUtils(object):
     def removeTag4Content(cls, str):
         if str is None:
             return u""
-        dd = str
+        dd = ArticleUtils.removeHtmlComment(str)
         dd = dd.replace("&#13;","<br>")
         #<div>作为段落标准的文章
         if "</p>" not in str and "</div>" in str:
@@ -76,18 +76,28 @@ class ArticleUtils(object):
     def removeTag4ContentSnapshot(cls, str):
         if str is None:
             return u""
+        dd = ArticleUtils.removeHtmlComment(str)
         dr = re.compile(u'<a.*?>')
-        dd = dr.sub(u"", str)
+        dd = dr.sub(u"", dd)
         dr2 = re.compile(u'</a>')
         dd = dr2.sub(u"", dd)
+        return dd
+
+    @classmethod
+    def removeHtmlComment(cls, str):
+        if str is None:
+            return u""
+        dr0 = re.compile(u'<!--.*?-->', re.S)
+        dd = dr0.sub(u"", str)
         return dd
 
     @classmethod
     def removeAllTag(cls, str):
         if str is None:
             return u""
+        dd = ArticleUtils.removeHtmlComment(str)
         dr = re.compile(u'<[^>]+>', re.S)
-        dd = dr.sub(u"", str)
+        dd = dr.sub(u"", dd)
         dd = StringUtils.replaceSpecialWords(dd)
         dd = StringUtils.trim(dd)
         return dd

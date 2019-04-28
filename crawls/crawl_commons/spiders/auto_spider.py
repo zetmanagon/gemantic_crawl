@@ -99,6 +99,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             enableSnapshot = True
         detailData = {}
         html = "".join(response.xpath("//html").extract())
+        html_body = ArticleUtils.removeAllTag("".join(response.xpath("//html//body").extract()))
         doc = Document(html)  # 利用readabilty处理文件
         if "detailData" in meta:
             detailData = meta["detailData"]
@@ -113,7 +114,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if 'anchorTime' in meta and meta['anchorTime'] > 0:
                 detailData["publishAt"] = meta['anchorTime']
             if "publishAt" not in detailData:
-                detailData["publishAt"] = TimeUtils.get_conent_time(html,0)
+                detailData["publishAt"] = TimeUtils.get_conent_time(html_body,0)
             # if detailData["publishAt"] == '':
             #     ts = time.strptime(meta["timestamp"], "%Y-%m-%d %H-%M-%S")
             #     ts = int(time.mktime(ts)) * 1000
