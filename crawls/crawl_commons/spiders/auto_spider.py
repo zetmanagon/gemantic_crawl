@@ -351,7 +351,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
 
             time = 0
             # 获取时间
-            if starturl.find('mohurd') > 0 or "http://www.hubei.gov.cn/govfile" in starturl:
+            if starturl.find('mohurd') > 0 or "www.hubei.gov.cn/govfile" in starturl:
                 timeInfos = a_tag.xpath('../../.').extract()
                 time = TimeUtils.get_conent_time("".join(timeInfos), 0)
             else:
