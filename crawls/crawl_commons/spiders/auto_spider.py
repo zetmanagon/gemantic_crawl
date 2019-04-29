@@ -316,7 +316,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 href = href.split('(')[1].strip(')').strip('\'')
 
             # 获取a标题文本内容，无内容的链接不抓取
-            texts = a_tag.xpath('text()|@title|li/text()').extract()
+            texts = a_tag.xpath('text()').extract()
             text = ''
             for t in texts:
                 text = text + t
