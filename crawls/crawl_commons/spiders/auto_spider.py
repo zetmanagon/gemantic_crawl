@@ -237,7 +237,9 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         "pNonedivNonedivlefttextdivfootercondivfooterdivwarpbodyNonehtmlNone",
         "liNoneulNonedivqggdgbcxcondivleftcondivmaincdivmaindivwarpbodyNonehtmlNone", #  贵州省政府公报
         "liNoneulNonedivyqljcondivlinkdivfooterbodyNonehtmlhttpwwwworgxhtml" #  贵州省商务厅
-        "liNoneuldiyselectlistdivselectlistdivdiyselectformNonedivconselectdivlinkdivMaindivwarpbodyNonehtmlNone" #安顺人民政府
+        "liNoneuldiyselectlistdivselectlistdivdiyselectformNonedivconselectdivlinkdivMaindivwarpbodyNonehtmlNone", #安顺人民政府
+        "spanjspeechpNonedivfootconfldivfootdivfooterbodyNonehtmlNone" #  http://www.ahtjj.gov.cn/tjjweb/web/list.jsp?strWebSiteId=13781720451562390&strColId=13786945245845740&strColId2=f1e311c6c10e4f3d835a485e704d3404
+        
         ]
         allowedtree =[r"liNoneulNonedivxxlbdivfrdivcontentbodyNonehtmlhttpwwwworgxhtml",
         "ulNonedivbddivgbslideTxtBoxdivleftleftBoxdivmainBoxbodyNonehtmlzhCN", #  宁夏
@@ -315,14 +317,17 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 href = href.split('(')[1].strip(')').strip('\'')
 
             # 获取a标题文本内容，无内容的链接不抓取
-            texts = a_tag.xpath('text()|@title|li/text()').extract()
-            text = ''
-            for t in texts:
-                text = text + t
-            if text is None:
-                continue
-            if len(text.strip()) == 0:
-                continue
+            texts = a_tag.xpath('text()').extract()
+            # onmouseout http://www.sc.gov.cn/10462/cwh/cwhhg/cwhhg.shtml
+            text = ''.join(texts)
+            if text is None or len(text.strip()) == 0:
+                texts = a_tag.xpath('@title').extract()
+                text = ''.join(texts)
+                if text is None or len(text.strip()) == 0:
+                    texts = a_tag.xpath('li/text()').extract()
+                    text = ''.join(texts)
+                    if text is None or len(text.strip()) == 0:
+                        continue
 
             # 相对地址绝对化
             if 'http' not in href:
