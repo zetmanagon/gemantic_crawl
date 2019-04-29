@@ -79,6 +79,26 @@ class TimeUtils(object):
     def getNowMill(cls):
         return int(time.time()*1000)
 
+
+    @classmethod
+    def get_list_time(self,a_tag):
+        time_tags = ["../span","../text()","span"]
+        timeMill = 0
+        for time_tag in time_tags:
+            times = a_tag.xpath(time_tag).extract()
+            time = StringUtils.trim("".join(times))
+            # print(time_tag+":"+time)
+            if StringUtils.isEmpty(time):
+                continue
+            timeMill = TimeUtils.get_conent_time(time,0)
+            # print(time_tag + ":"+time, timeMill)
+            if timeMill == 0:
+                continue
+            else:
+                return timeMill
+        return timeMill
+
+
     @classmethod
     def get_conent_time(cls, html, index):
         '''

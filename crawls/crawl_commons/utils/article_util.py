@@ -540,6 +540,11 @@ class ArticleUtils(object):
                 return True
         if "title" not in detail:
             return True
+        if detail["url"] in detail["title"] or detail["title"] in detail["url"]:
+            return True
+        # if "publishAt" not in detail or int(detail["publishAt"]) <= 0:
+        #     return True
+
         title = detail["title"]
         if ArticleUtils.isErrorTitle(title):
             return True
@@ -565,6 +570,8 @@ class ArticleUtils(object):
             return StringUtils.trim(ArticleUtils.removeAllTag(headTitle.split("_")[0]))
         if "--" in headTitle and len(StringUtils.trim(headTitle.split("--")[0])) >=5:
             return StringUtils.trim(ArticleUtils.removeAllTag(headTitle.split("--")[0]))
+        if " - " in headTitle and len(StringUtils.trim(headTitle.split(" - ")[0])) >=5:
+            return StringUtils.trim(ArticleUtils.removeAllTag(headTitle.split(" - ")[0]))
         return StringUtils.trim(ArticleUtils.removeAllTag(headTitle))
 
     @classmethod

@@ -99,7 +99,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             enableSnapshot = True
         detailData = {}
         html = "".join(response.xpath("//html").extract())
-        html_body = ArticleUtils.removeAllTag("".join(response.xpath("//html//body").extract()))
+        html_body = ArticleUtils.removeHtmlComment("".join(response.xpath("//html//body").extract()))
         doc = Document(html)  # 利用readabilty处理文件
         if "detailData" in meta:
             detailData = meta["detailData"]
@@ -115,6 +115,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 detailData["publishAt"] = meta['anchorTime']
             if "publishAt" not in detailData:
                 detailData["publishAt"] = TimeUtils.get_conent_time(html_body,0)
+                # detailData["publishAt"] = TimeUtils.get_detail_time(html_body)
             # if detailData["publishAt"] == '':
             #     ts = time.strptime(meta["timestamp"], "%Y-%m-%d %H-%M-%S")
             #     ts = int(time.mktime(ts)) * 1000
@@ -184,11 +185,12 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         @parm response
         @return url 字典{url：锚文本}
         '''
-        a_tags = response.xpath('//a')
+        a_tags = response.xpath('//a[text()]')
         print('-------------------------------')
         print('所有的链接数目', len(a_tags))
 
         href_parent = self.getSameParent(starturl, a_tags, fine=False)
+
         onlyFlag =True
         minNum = 1
         for resUrl in minNumZero:
@@ -302,44 +304,66 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         @fine:精细模式
         @return：href_parent字典，（父节点名称：【urls】）
         '''
+
         href_parent = dict()
         if fine is True:
             i = 0
             lastname = ''
+        hasPubTimeUrls = []
         for a_tag in a_tags:
+
             # 抽取href，过滤掉无效链接
             href = a_tag.xpath('@href').extract_first()
-            if href is None:
+            if StringUtils.isEmpty(href):
                 continue
             if 'javascript:openUrl' in href:
                 # print(href)
                 href = href.split('(')[1].strip(')').strip('\'')
-
-            # 获取a标题文本内容，无内容的链接不抓取
-            texts = a_tag.xpath('text()').extract()
-            text = ''
-            for t in texts:
-                text = text + t
-            if text is None:
-                continue
-            if len(text.strip()) == 0:
-                continue
-
-            # 相对地址绝对化
             if 'http' not in href:
                 href = urljoin(starturl, href)
+            # 获取a标题文本内容，无内容的链接不抓取
+                # 获取a标题文本内容，无内容的链接不抓取
+            title = a_tag.xpath("@title").extract_first()
+            if StringUtils.isNotEmpty(title) and ("http" in title or href in title or title in href):
+                title = ""
+            if StringUtils.isEmpty(title):
+                title = "".join(a_tag.xpath('text()').extract())
 
+            # onmouseout http://www.sc.gov.cn/10462/cwh/cwhhg/cwhhg.shtml
+            title = StringUtils.trim(title)
+            if StringUtils.isEmpty(title) or len(title)<=3 or title in href or href in title:
+                continue
+            # print("----------"+text+"--------------------")
+            # if StringUtils.isEmpty(text):
+            #     textsTitle = a_tag.xpath('@title').extract()
+            #     text = StringUtils.trim(''.join(textsTitle))
+            #     if "http:" in text:
+            #         text = ""
+            #     if StringUtils.isEmpty(text):
+            #         texts = a_tag.xpath('li/text()').extract()
+            #         text = StringUtils.trim("".join(texts))
+
+            # if StringUtils.isEmpty(text):
+            #     continue
+
+
+            # 相对地址绝对化
+
+            time = 0
             # 获取时间
             if starturl.find('mohurd') > 0:
-                timeInfo = a_tag.xpath('../../.').extract()
+                timeInfos = a_tag.xpath('../../.').extract()
+                time = TimeUtils.get_conent_time("".join(timeInfos), 0)
             else:
-                timeInfo = a_tag.xpath('../text()|../span').extract()
-            time = ''
-            for t in timeInfo:
-                time = time + t
-            # print(time)
+                time = TimeUtils.get_list_time(a_tag)
+            #同一个链接存在多个，有发布时间的数据优先使用
+            if time > 0:
+                hasPubTimeUrls.append(href)
+            elif time <=0 and href in hasPubTimeUrls:
+                continue
+            # print(href, title, time)
             # print('*'*20)
-            time = TimeUtils.get_conent_time(time,0)
+
             # print (time)
 
             # 获取父节点
@@ -361,22 +385,22 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 if fine is True:
                     if father_name not in href_parent:
                         lastname = father_name
-                        href_parent[father_name] = [(a_tag, text, len(text), href, time)]
+                        href_parent[father_name] = [(a_tag, title, len(title), href, time)]
                         print(father_name + ":" + href)
                     elif father_name == lastname or lastname.endswith(father_name) == True:
-                        href_parent[lastname].append((a_tag, text, len(text), href, time))
+                        href_parent[lastname].append((a_tag, title, len(title), href, time))
                         print(lastname + ":" + href)
                     else:
                         father_name = str(i) + father_name
                         i = i + 1
-                        href_parent[father_name] = [(a_tag, text, len(text), href, time)]
+                        href_parent[father_name] = [(a_tag, title, len(title), href, time)]
                         print(father_name + ":" + href)
                         lastname = father_name
                 else:
                     if father_name not in href_parent:
-                        href_parent[father_name] = [(a_tag, text, len(text), href, time)]
+                        href_parent[father_name] = [(a_tag, title, len(title), href, time)]
                     else:
-                        href_parent[father_name].append((a_tag, text, len(text), href, time))
+                        href_parent[father_name].append((a_tag, title, len(title), href, time))
         return href_parent
 
     def classExtract(self, xpath):
