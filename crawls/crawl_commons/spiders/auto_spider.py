@@ -109,7 +109,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             # if len(detailData["title"]) <= len(meta['anchorText']):
             #     detailData["title"] = meta['anchorText']
             detailData["title"] = meta['anchorText'].strip()
-            if detailData["title"].find('...') != -1 or detailData["title"] == '' or len(detailData["title"])<=3:
+            if detailData["title"].find('...') != -1 or detailData["title"] == '' or len(detailData["title"])<=2:
                 detailData["title"] = ArticleUtils.cleanHeadTitle(doc.title())
             if 'anchorTime' in meta and meta['anchorTime'] > 0:
                 detailData["publishAt"] = meta['anchorTime']
