@@ -109,7 +109,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             # if len(detailData["title"]) <= len(meta['anchorText']):
             #     detailData["title"] = meta['anchorText']
             detailData["title"] = meta['anchorText'].strip()
-            if detailData["title"].find('...') != -1 or detailData["title"] == '':
+            if detailData["title"].find('...') != -1 or detailData["title"] == '' or len(detailData["title"])<=3:
                 detailData["title"] = ArticleUtils.cleanHeadTitle(doc.title())
             if 'anchorTime' in meta and meta['anchorTime'] > 0:
                 detailData["publishAt"] = meta['anchorTime']
@@ -331,7 +331,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
 
             # onmouseout http://www.sc.gov.cn/10462/cwh/cwhhg/cwhhg.shtml
             title = StringUtils.trim(title)
-            if StringUtils.isEmpty(title) or len(title)<=3 or title in href or href in title:
+            if StringUtils.isEmpty(title) or title in href or href in title:
                 continue
             # print("----------"+text+"--------------------")
             # if StringUtils.isEmpty(text):
