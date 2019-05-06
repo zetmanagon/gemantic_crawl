@@ -99,7 +99,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             enableSnapshot = True
         detailData = {}
         html = "".join(response.xpath("//html").extract())
-        html_body = ArticleUtils.removeHtmlComment("".join(response.xpath("//html").extract()))
+        html_body = ArticleUtils.removeHtmlComment(html)
         doc = Document(html)  # 利用readabilty处理文件
         if "detailData" in meta:
             detailData = meta["detailData"]
