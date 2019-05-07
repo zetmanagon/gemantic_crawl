@@ -93,10 +93,11 @@ class ArticleUtils(object):
 
     @classmethod
     def removeHtmlFooter(cls, html,response):
-        footer = "".join(response.xpath('//footer|//div[@class="footer"]').extract())
-        if StringUtils.isNotEmpty(footer):
-            return html.replace(footer,"")
-        return html
+        footers = response.xpath('//footer|//div[contains(@class,"footer")]').extract()
+        content = html
+        for f in footers:
+            content = content.replace(f,"")
+        return content
 
     @classmethod
     def removeAllTag(cls, str):
