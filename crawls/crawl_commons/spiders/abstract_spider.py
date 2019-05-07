@@ -226,7 +226,8 @@ class AbstractSpider(object):
 
         contentAutoData = None
         html = "".join(response.xpath("//html").extract())
-        html_body = ArticleUtils.removeAllTag("".join(response.xpath("//html//body").extract()))
+        html_body = ArticleUtils.removeAllTag(ArticleUtils.removeHtmlComment("".join(response.xpath("//html//body").extract())))
+        html_remove_footer = ArticleUtils.removeHtmlFooter(ArticleUtils.removeHtmlComment(html), response)
         meta["autoDetailData"] = autoDetailData
         maxPageNumber = 0
         pageContent = ""
@@ -265,7 +266,7 @@ class AbstractSpider(object):
 
         if StringUtils.isEmpty(pageContent) and pageContentImages is None:
             if contentAutoData is None:
-                contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber, html, enableDownloadImage,enableSnapshot)
+                contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber, html_remove_footer, enableDownloadImage,enableSnapshot)
             if "contentImages" in contentAutoData:
                 pageContentImages = contentAutoData["contentImages"]
             if "content" in contentAutoData:
@@ -288,7 +289,7 @@ class AbstractSpider(object):
             if contentPageNumber <=1 and "publishAt" not in detailData and "publishAt" not in autoDetailData and "publishAt" not in listData:
                 autoDetailData["publishAt"] = TimeUtils.get_conent_time(html_body,-1)
             if contentAutoData is None and (("title" not in detailData and "title" not in listData) or (StringUtils.isEmpty(pageContent)) and pageContentImages is None):
-                contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber,html, enableDownloadImage, enableSnapshot)
+                contentAutoData = ArticleUtils.getAutoDetail(contentPageNumber,html_remove_footer, enableDownloadImage, enableSnapshot)
             ArticleUtils.mergeNewDict(autoDetailData, contentAutoData)
 
 

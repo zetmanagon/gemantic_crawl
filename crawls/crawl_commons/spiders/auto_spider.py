@@ -100,7 +100,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         detailData = {}
         html = "".join(response.xpath("//html").extract())
         html_body = ArticleUtils.removeHtmlComment(html)
-        doc = Document(html)  # 利用readabilty处理文件
+        html_remove_footer = ArticleUtils.removeHtmlFooter(html_body,response)
+        doc = Document(html_remove_footer)  # 利用readabilty处理文件
         if "detailData" in meta:
             detailData = meta["detailData"]
         if len(detailData) <= 0:
@@ -125,7 +126,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         useNewspapaer = False  # 是否使用了newspaper
         if len(ArticleUtils.removeTag4Content(content_snap).strip()) < 3 or meta['newspaper']:
             article = Article(response.url, language='zh', keep_article_html=True, fetch_images=False)
-            article.download(input_html=response.text)
+            article.download(input_html=html_remove_footer)
             article.parse()
             content = article.text
             content_snap = article.article_html
