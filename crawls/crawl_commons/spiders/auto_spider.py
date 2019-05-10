@@ -123,17 +123,16 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             #     detailData["publishAt"] = ts
             detailData["url"] = url
         content_snap = doc.summary()
-        useNewspapaer = False  # 是否使用了newspaper
+        content = ""
         if len(ArticleUtils.removeTag4Content(content_snap).strip()) < 3 or meta['newspaper']:
             article = Article(response.url, language='zh', keep_article_html=True, fetch_images=False)
             article.download(input_html=html_remove_footer)
             article.parse()
-            content = article.text
+            content = ArticleUtils.removeTag4Content(article.text)
             content_snap = article.article_html
-            useNewspapaer = True
-        # 获取正文
-        if useNewspapaer == False:
+        else:
             content = ArticleUtils.removeTag4Content(content_snap)  # 如果没用newspaper，将快照去标签作正文
+
         ArticleUtils.mergeDict(detailData, "content", content)
         if enableDownloadImage:
             images = ArticleUtils.get_content_image_urls(content_snap, url)
