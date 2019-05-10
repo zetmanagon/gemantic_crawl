@@ -82,7 +82,7 @@ class TimeUtils(object):
 
     @classmethod
     def get_list_time(self,a_tag):
-        time_tags = ["../span","../text()","span"]
+        time_tags = ["../span","../i","../*","../text()","span","i","*","../../span","../../i","../../*","../../text()"]
         timeMill = 0
         for time_tag in time_tags:
             times = a_tag.xpath(time_tag).extract()
