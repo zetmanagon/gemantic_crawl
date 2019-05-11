@@ -53,6 +53,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         for url in link_list.keys():
             if not ArticleUtils.isSameSite(start_url,url):
                 continue
+            if ArticleUtils.isErrorUrl(url):
+                continue
             metaCopy = meta.copy()
             for resUrl in self.restrictContentTitle:
                 if ArticleUtils.isSameSite(resUrl, start_url):
