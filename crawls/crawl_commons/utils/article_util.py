@@ -98,6 +98,8 @@ class ArticleUtils(object):
         blockquotes = response.xpath('//blockquote').extract()
         #隐含网页文本去掉
         displayNones = response.xpath('//*[contains(@style,"display:none")]').extract()
+        #微信分享
+        wechatNodes = response.xpath("//*[@data-wechat]").extract()
         content = html
         for f in footers:
             content = content.replace(f,"")
@@ -105,6 +107,8 @@ class ArticleUtils(object):
             content = content.replace(b, "")
         for d in displayNones:
             content = content.replace(d,"")
+        for w in wechatNodes:
+            content = content.replace(w,"")
         return content
 
 
