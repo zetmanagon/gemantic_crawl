@@ -92,12 +92,21 @@ class ArticleUtils(object):
         return dd
 
     @classmethod
-    def removeHtmlFooter(cls, html,response):
+    def removeHtmlSpecialTag(cls, html,response):
         footers = response.xpath('//footer|//div[contains(@class,"footer")]').extract()
+        #引用外部源
+        blockquotes = response.xpath('//blockquote').extract()
+        #隐含网页文本去掉
+        displayNones = response.xpath('//*[contains(@style,"display:none")]').extract()
         content = html
         for f in footers:
             content = content.replace(f,"")
+        for b in blockquotes:
+            content = content.replace(b, "")
+        for d in displayNones:
+            content = content.replace(d,"")
         return content
+
 
     @classmethod
     def removeAllTag(cls, str):

@@ -102,8 +102,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         detailData = {}
         html = "".join(response.xpath("//html").extract())
         html_body = ArticleUtils.removeHtmlComment(html)
-        html_remove_footer = ArticleUtils.removeHtmlFooter(html_body,response)
-        doc = Document(html_remove_footer)  # 利用readabilty处理文件
+        html_remove = ArticleUtils.removeHtmlSpecialTag(html_body,response)
+        doc = Document(html_remove)  # 利用readabilty处理文件
         if "detailData" in meta:
             detailData = meta["detailData"]
         if len(detailData) <= 0:
@@ -117,7 +117,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if 'anchorTime' in meta and meta['anchorTime'] > 0:
                 detailData["publishAt"] = meta['anchorTime']
             if "publishAt" not in detailData:
-                detailData["publishAt"] = TimeUtils.get_conent_time(html_body,0)
+                detailData["publishAt"] = TimeUtils.get_conent_time(html_remove,0)
                 # detailData["publishAt"] = TimeUtils.get_detail_time(html_body)
             # if detailData["publishAt"] == '':
             #     ts = time.strptime(meta["timestamp"], "%Y-%m-%d %H-%M-%S")
@@ -128,7 +128,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         content = ""
         if len(ArticleUtils.removeTag4Content(content_snap).strip()) < 3 or meta['newspaper']:
             article = Article(response.url, language='zh', keep_article_html=True, fetch_images=False)
-            article.download(input_html=html_remove_footer)
+            article.download(input_html=html_remove)
             article.parse()
             content = ArticleUtils.removeTag4Content(article.text)
             content_snap = article.article_html
