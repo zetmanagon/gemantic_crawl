@@ -31,7 +31,7 @@ class ArticleUtils(object):
 
     ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|请用新域名访问|BadGateway|BadRequest|ErrorPage).*')
 
-    ERROR_URL_PATTERN = re.compile(u'^((?!www.gov.cn/zhuanti/|www.china.com.cn/zhibo/|www.mct.gov.cn/vipchat/|www.chinatax.gov.cn/fangtan/).)*$')
+    ERROR_URL_PATTERN = re.compile(u'^((?!www.gov.cn/zhuanti/|www.china.com.cn/zhibo/|www.mct.gov.cn/vipchat/|fangtan).)*$')
 
     @classmethod
     def removeTag4Content(cls, str):
