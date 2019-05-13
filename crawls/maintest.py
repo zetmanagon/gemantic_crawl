@@ -8,6 +8,12 @@ import json
 import sys
 print(sys.path)
 print(sys.modules.keys())
+print("--------------------------")
+print(ArticleUtils.removeAllTag("dfs<ab>aaa<cd><!-- <h2 class=\"cont_title\">河北省人民政府关于印发《河北省人口发展规划（2018-2035年）》的通知</h2> -->"))
+print("--------------------------")
+aa = ["abc","d","sdfadsdf"]
+aa = sorted(aa,key=lambda x:len(x),reverse=True)
+print(aa)
 # seedRepositroy = SeedRepository()
 # crawlRegexDict = seedRepositroy.get_regex("http://finance.sina.com.cn/zl/")
 # for i,v in enumerate(crawlRegexDict):

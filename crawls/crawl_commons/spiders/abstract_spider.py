@@ -227,7 +227,7 @@ class AbstractSpider(object):
         contentAutoData = None
         html = "".join(response.xpath("//html").extract())
         html_body = ArticleUtils.removeHtmlSpecialTag(ArticleUtils.removeHtmlComment("".join(response.xpath("//html//body").extract())))
-        html_remove = ArticleUtils.removeHtmlSpecialTag(ArticleUtils.removeHtmlComment(html), response)
+        html_remove = ArticleUtils.removeHtmlSpecialTag4Content(ArticleUtils.removeHtmlComment(html), response)
         meta["autoDetailData"] = autoDetailData
         maxPageNumber = 0
         pageContent = ""
