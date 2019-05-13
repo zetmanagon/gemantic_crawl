@@ -31,7 +31,7 @@ class ArticleUtils(object):
 
     ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|请用新域名访问|BadGateway|BadRequest|ErrorPage).*')
 
-    ERROR_URL_PATTERN = re.compile(u'^((?!www.gov.cn/zhuanti/|www.china.com.cn/zhibo/).)*$')
+    ERROR_URL_PATTERN = re.compile(u'^((?!www.gov.cn/zhuanti/|www.china.com.cn/zhibo/|www.mct.gov.cn/vipchat/|www.chinatax.gov.cn/fangtan/).)*$')
 
     @classmethod
     def removeTag4Content(cls, str):
@@ -93,22 +93,52 @@ class ArticleUtils(object):
 
     @classmethod
     def removeHtmlSpecialTag(cls, html,response):
+        allnodes = ArticleUtils.getHtmlSpecialTag(html,response)
+        allnodes = sorted(allnodes,key=lambda x:len(x),reverse=True)
+
+        content = ArticleUtils.replaceContent(html,allnodes,"")
+        # content = ArticleUtils.replaceContent(content, blockquotes, "")
+        # content = ArticleUtils.replaceContent(content, displayNones, "")
+        # content = ArticleUtils.replaceContent(content, wechatNodes, "")
+        return content
+
+    @classmethod
+    def getHtmlSpecialTag(cls, html, response):
         footers = response.xpath('//footer|//div[contains(@class,"footer")]').extract()
-        #引用外部源
-        blockquotes = response.xpath('//blockquote').extract()
-        #隐含网页文本去掉
+        # 引用外部源
+        blockquotes = response.xpath('//blockquote|//script|//noscript').extract()
+        # 隐含网页文本去掉
         displayNones = response.xpath('//*[contains(@style,"display:none")]').extract()
-        #微信分享
+        # 微信分享
         wechatNodes = response.xpath("//*[@data-wechat]").extract()
-        content = html
-        for f in footers:
-            content = content.replace(f,"")
-        for b in blockquotes:
-            content = content.replace(b, "")
-        for d in displayNones:
-            content = content.replace(d,"")
-        for w in wechatNodes:
-            content = content.replace(w,"")
+        allnodes = footers + blockquotes + displayNones + wechatNodes
+        # allnodes = sorted(allnodes, key=lambda x: len(x), reverse=True)
+        return allnodes
+
+    @classmethod
+    def replaceContent(cls,content,searchs,replace_str):
+        if searchs is None or len(searchs) <=0:
+            return content
+        result = content
+        for s in searchs:
+            result = result.replace(s,replace_str)
+        return result
+
+
+    @classmethod
+    def removeHtmlSpecialTag4Content(cls, html, response):
+        allnodes = ArticleUtils.getHtmlSpecialTag(html,response)
+        # 位置
+        positonsTags = response.xpath('//*[contains(text(),"您现在的位置：") or contains(text(),"您所在的位置：") or contains(text(),"当前位置：") or contains(text(),"字体：") or contains(text(),"分享到：")]').extract()
+        allnodes = allnodes + positonsTags
+        allnodes = sorted(allnodes,key=lambda x:len(x),reverse=True)
+        # print("positonsTags---------------",positonsTags)
+        content = ArticleUtils.replaceContent(html, allnodes, "")
+        fontTags = response.xpath('//*[contains(text(),"大") or contains(text(),"小") or contains(text(),"中")]').extract()
+        for fo in fontTags:
+            fom = StringUtils.trim(ArticleUtils.removeAllTag(fo))
+            if fom == "大" or fom == "中" or fom == "小":
+                content = content.replace(fo, "")
         return content
 
 

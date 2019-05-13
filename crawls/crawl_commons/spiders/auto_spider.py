@@ -103,7 +103,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         html = "".join(response.xpath("//html").extract())
         html_body = ArticleUtils.removeHtmlComment(html)
         html_remove = ArticleUtils.removeHtmlSpecialTag(html_body,response)
-        doc = Document(html_remove)  # 利用readabilty处理文件
+        html_remove4content = ArticleUtils.removeHtmlSpecialTag4Content(html_body,response)
+        doc = Document(html_remove4content)  # 利用readabilty处理文件
         if "detailData" in meta:
             detailData = meta["detailData"]
         if len(detailData) <= 0:
@@ -112,7 +113,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             # if len(detailData["title"]) <= len(meta['anchorText']):
             #     detailData["title"] = meta['anchorText']
             detailData["title"] = meta['anchorText'].strip()
-            if detailData["title"].find('...') != -1 or detailData["title"] == '' or len(detailData["title"])<=2:
+            if detailData["title"].find('...') != -1 or detailData["title"].find("…") != -1 or detailData["title"] == '' or len(detailData["title"])<=2:
                 detailData["title"] = ArticleUtils.cleanHeadTitle(doc.title())
             if 'anchorTime' in meta and meta['anchorTime'] > 0:
                 detailData["publishAt"] = meta['anchorTime']
@@ -128,7 +129,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         content = ""
         if len(ArticleUtils.removeTag4Content(content_snap).strip()) < 3 or meta['newspaper']:
             article = Article(response.url, language='zh', keep_article_html=True, fetch_images=False)
-            article.download(input_html=html_remove)
+            article.download(input_html=html_remove4content)
             article.parse()
             content = ArticleUtils.removeTag4Content(article.text)
             content_snap = article.article_html
