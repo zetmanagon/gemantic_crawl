@@ -124,6 +124,7 @@ class ArticleUtils(object):
             result = result.replace(s,replace_str)
         return result
 
+    TAG4CONTENT_REMOVE = ["大","中","小","打印","分享","打印本页","关闭","关闭窗口"]
 
     @classmethod
     def removeHtmlSpecialTag4Content(cls, html, response):
@@ -134,10 +135,10 @@ class ArticleUtils(object):
         allnodes = sorted(allnodes,key=lambda x:len(x),reverse=True)
         # print("positonsTags---------------",positonsTags)
         content = ArticleUtils.replaceContent(html, allnodes, "")
-        fontTags = response.xpath('//*[contains(text(),"大") or contains(text(),"小") or contains(text(),"中")]').extract()
+        fontTags = response.xpath('//*[contains(text(),"大") or contains(text(),"关闭") or contains(text(),"打印") or contains(text(),"小") or contains(text(),"中")]').extract()
         for fo in fontTags:
             fom = StringUtils.trim(ArticleUtils.removeAllTag(fo))
-            if fom == "大" or fom == "中" or fom == "小":
+            if fom in ArticleUtils.TAG4CONTENT_REMOVE:
                 content = content.replace(fo, "")
         return content
 
