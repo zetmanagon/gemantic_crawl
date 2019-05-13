@@ -129,7 +129,7 @@ class ArticleUtils(object):
     def removeHtmlSpecialTag4Content(cls, html, response):
         allnodes = ArticleUtils.getHtmlSpecialTag(html,response)
         # 位置
-        positonsTags = response.xpath('//*[contains(text(),"您现在的位置：") or contains(text(),"您所在的位置：") or contains(text(),"当前位置：") or contains(text(),"字体：") or contains(text(),"分享到：")]').extract()
+        positonsTags = response.xpath('//*[contains(text(),"现在的位置：") or contains(text(),"所在的位置：")  or contains(text(),"所在位置：") or contains(text(),"当前位置：") or contains(text(),"当前的位置：") or contains(text(),"字体：") or contains(text(),"分享到：") or contains(text(),"短网址：") or contains(text(),"字号:")]').extract()
         allnodes = allnodes + positonsTags
         allnodes = sorted(allnodes,key=lambda x:len(x),reverse=True)
         # print("positonsTags---------------",positonsTags)
