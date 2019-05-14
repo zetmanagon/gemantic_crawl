@@ -86,7 +86,7 @@ class AbstractSpider(object):
         listRegex = listRegexs[-1]
         json_data = None
         if listRegex.regexType == 'json':
-            json_data = ArticleUtils.getJsonContent(response)
+            json_data = ArticleUtils.getJsonContent(listRegexs,response)
             if StringUtils.isEmpty(json_data):
                 self.log("%s no json regex failed" % response.url)
                 yield
@@ -107,12 +107,13 @@ class AbstractSpider(object):
                 itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
                 listDataAll[k] = itemValues
         else:
-            detailUrls = ArticleUtils.getResponseJsonFieldValue(listRegex.regexField, listRegexs, json_data)
-            for (k, v) in regexDict.items():
-                if "nextPage" == k or "list" == k:
-                    continue
-                itemValues = ArticleUtils.getResponseJsonFieldValue(k, v, json_data)
-                listDataAll[k] = itemValues
+            detailUrls, listDataAll = ArticleUtils.getJsonFieldValues(regexDict.items(),json_data)
+            # detailUrls = ArticleUtils.getResponseJsonFieldValue(listRegex.regexField, listRegexs, json_data)
+            # for (k, v) in regexDict.items():
+            #     if "nextPage" == k or "list" == k:
+            #         continue
+            #     itemValues = ArticleUtils.getResponseJsonFieldValue(k, v, json_data)
+            #     listDataAll[k] = itemValues
 
         if detailUrls is None or len(detailUrls)<=0:
             self.log("no detailUrls %s " % response.url)
@@ -226,7 +227,7 @@ class AbstractSpider(object):
 
         contentAutoData = None
         html = "".join(response.xpath("//html").extract())
-        html_body = ArticleUtils.removeHtmlSpecialTag(ArticleUtils.removeHtmlComment("".join(response.xpath("//html//body").extract())))
+        html_body = ArticleUtils.removeHtmlSpecialTag(ArticleUtils.removeHtmlComment("".join(response.xpath("//html//body").extract())),response)
         html_remove = ArticleUtils.removeHtmlSpecialTag4Content(ArticleUtils.removeHtmlComment(html), response)
         meta["autoDetailData"] = autoDetailData
         maxPageNumber = 0

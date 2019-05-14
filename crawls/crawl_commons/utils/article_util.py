@@ -634,67 +634,188 @@ class ArticleUtils(object):
             return False
         return True
 
+    # @classmethod
+    # def getJsonContent(cls, webRegexs,response):
+    #     '''
+    #     从response中获得json数据，暂时以学习强国为模板
+    #     @response
+    #     @return 有用的包含json的字串
+    #     '''
+    #     regexfieldsrawdata = "".join(response.xpath("//html").extract())
+    #     # print(regexfieldsrawdata)
+    #     size = len(regexfieldsrawdata)
+    #
+    #     count_leftbarckets = 0  # regexfieldsrawdata数据中'['的个数
+    #     count_rightbrackets = count_leftbarckets  # regexfieldsrawdata数据中']'的个数
+    #
+    #     index_leftbrackets = -1  # 用来记录regexfieldsrawdata中第一个'['的位置
+    #     index_rightbrackets = -1  # 用来记录regexfieldsrawdata中第一个'['对应']'的位置
+    #
+    #     for i in range(size):
+    #         if regexfieldsrawdata[i] == '[':
+    #             count_leftbarckets = count_leftbarckets + 1
+    #             count_rightbrackets = count_leftbarckets
+    #             if count_leftbarckets == 1:
+    #                 index_leftbrackets = i
+    #     for i in range(size):
+    #         if regexfieldsrawdata[i] == ']':
+    #             count_rightbrackets = count_rightbrackets - 1
+    #         if count_rightbrackets == 1:
+    #             index_rightbrackets = i
+    #     # 如果遍历完成后，index_leftbrackets保持不变，说明jsonrawdata中没有'['
+    #     if index_leftbrackets == -1:
+    #         print('No regexfields')
+    #     regexfields = regexfieldsrawdata[index_leftbrackets: index_rightbrackets + 2]
+    #     if regexfields[0] == '[' and regexfields[-1] == ']':
+    #         return regexfields
+    #     else:
+    #         return ''
+
     @classmethod
-    def getJsonContent(cls, response):
-        '''
-        从response中获得json数据，暂时以学习强国为模板
-        @response
-        @return 有用的包含json的字串
-        '''
-        regexfieldsrawdata = "".join(response.xpath("//html").extract())
-        # print(regexfieldsrawdata)
-        size = len(regexfieldsrawdata)
-
-        count_leftbarckets = 0  # regexfieldsrawdata数据中'['的个数
-        count_rightbrackets = count_leftbarckets  # regexfieldsrawdata数据中']'的个数
-
-        index_leftbrackets = -1  # 用来记录regexfieldsrawdata中第一个'['的位置
-        index_rightbrackets = -1  # 用来记录regexfieldsrawdata中第一个'['对应']'的位置
-
-        for i in range(size):
-            if regexfieldsrawdata[i] == '[':
-                count_leftbarckets = count_leftbarckets + 1
-                count_rightbrackets = count_leftbarckets
-                if count_leftbarckets == 1:
-                    index_leftbrackets = i
-        for i in range(size):
-            if regexfieldsrawdata[i] == ']':
-                count_rightbrackets = count_rightbrackets - 1
-            if count_rightbrackets == 1:
-                index_rightbrackets = i
-        # 如果遍历完成后，index_leftbrackets保持不变，说明jsonrawdata中没有'['
-        if index_leftbrackets == -1:
-            print('No regexfields')
-        regexfields = regexfieldsrawdata[index_leftbrackets: index_rightbrackets + 2]
-        if regexfields[0] == '[' and regexfields[-1] == ']':
-            return regexfields
+    def getJsonContent(cls, webRegexs, response):
+        json_data = None
+        if len(webRegexs) > 1:
+            contentRegexs = webRegexs[0:-1]
+            json_data = "".join(ArticleUtils.getResponseContents4WebRegex(contentRegexs,response))
         else:
-            return ''
+            json_data = "".join(response.xpath("//html").extract())
+        if StringUtils.isEmpty(json_data):
+            return ""
+
+        firstObjectStartIndex = -1
+        middle_content = "},{"
+        start_content = "[{"
+        end_content = "}]"
+        firstObjectEndIndex = json_data.find(middle_content)
+        isOneRecode = False
+        if firstObjectEndIndex < 0:
+            firstObjectEndIndex = json_data.find(end_content)
+            if firstObjectEndIndex < 0:
+                return ""
+            else:
+                isOneRecode = True
+        #一条记录情况
+        if isOneRecode:
+            firstObjectStartIndex = json_data[:firstObjectEndIndex].find(start_content)
+            if firstObjectStartIndex < 0:
+                return ""
+            else:
+                return json_data[firstObjectStartIndex:firstObjectEndIndex+len(end_content)]
+        # nextFirstObjectEndIndex = firstObjectEndIndex
+        #多条记录
+        while firstObjectStartIndex < 0 and firstObjectEndIndex >= 0:
+            firstObjectStartIndex = json_data[:firstObjectEndIndex].rfind(start_content)
+            if firstObjectStartIndex < 0:
+                nextFirstObjectEndIndex = json_data[firstObjectEndIndex+len(middle_content):].find(middle_content)
+                if nextFirstObjectEndIndex >=0:
+                    firstObjectEndIndex = firstObjectEndIndex+nextFirstObjectEndIndex+len(middle_content)
+        print("firstObjectStartIndex=",firstObjectStartIndex)
+        print("firstObjectEndIndex=", firstObjectEndIndex)
+
+        if firstObjectStartIndex < 0 or firstObjectEndIndex < 0:
+            return ""
+        print(json_data[firstObjectStartIndex:firstObjectEndIndex])
+        lastObjectStartIndex = json_data[firstObjectEndIndex:].rfind(middle_content)+firstObjectEndIndex
+        print("lastObjectStartIndex=",lastObjectStartIndex)
+        # if lastObjectStartIndex < 0:
+        lastObjectEndIndex = -1
+        while lastObjectEndIndex < 0 and lastObjectStartIndex >= 0:
+            # print(json_data[lastObjectStartIndex+len(middle_content):])
+            lastObjectEndIndex = json_data[lastObjectStartIndex+len(middle_content):].find(end_content)
+            print("lastObjectEndIndex=", lastObjectEndIndex)
+            if lastObjectEndIndex < 0:
+                lastObjectStartIndex = json_data[:lastObjectStartIndex].rfind(middle_content)
+
+        if lastObjectEndIndex < 0:
+            return ""
+        lastObjectEndIndex = lastObjectStartIndex+len(middle_content)+lastObjectEndIndex
+        print("lastObjectEndIndex=", lastObjectEndIndex)
+        print(json_data[lastObjectStartIndex:lastObjectEndIndex+len(end_content)])
+        return json_data[firstObjectStartIndex:lastObjectEndIndex+len(end_content)]
+
+
+        # # print(regexfieldsrawdata)
+        # size = len(regexfieldsrawdata)
+        #
+        # count_leftbarckets = 0  # regexfieldsrawdata数据中'['的个数
+        # count_rightbrackets = count_leftbarckets  # regexfieldsrawdata数据中']'的个数
+        #
+        # index_leftbrackets = -1  # 用来记录regexfieldsrawdata中第一个'['的位置
+        # index_rightbrackets = -1  # 用来记录regexfieldsrawdata中第一个'['对应']'的位置
+        #
+        # for i in range(size):
+        #     if regexfieldsrawdata[i] == '[':
+        #         count_leftbarckets = count_leftbarckets + 1
+        #         count_rightbrackets = count_leftbarckets
+        #         if count_leftbarckets == 1:
+        #             index_leftbrackets = i
+        # for i in range(size):
+        #     if regexfieldsrawdata[i] == ']':
+        #         count_rightbrackets = count_rightbrackets - 1
+        #     if count_rightbrackets == 1:
+        #         index_rightbrackets = i
+        # # 如果遍历完成后，index_leftbrackets保持不变，说明jsonrawdata中没有'['
+        # if index_leftbrackets == -1:
+        #     print('No regexfields')
+        # regexfields = regexfieldsrawdata[index_leftbrackets: index_rightbrackets + 2]
+        # if regexfields[0] == '[' and regexfields[-1] == ']':
+        #     return regexfields
+        # else:
+        #     return ''
+
+    # @classmethod
+    # def getResponseJsonFieldValue(cls, regexField, webRegexs, jsdata):
+    #     '''
+    #     json按规则取元素
+    #     @regexField:区域名
+    #     @webRegexs：对应规则
+    #     @response
+    #     @starturl:种子链接
+    #     return：该区域内容
+    #     '''
+    #     result = []
+    #     jsdata = json.loads(jsdata)
+    #     for regexfield_temp in jsdata:
+    #         for _webRegex in webRegexs:
+    #             webRegex = _webRegex.regexContent
+    #             regexfield_temp = regexfield_temp[webRegex]
+    #             # if "content" == regexField or "contentSnapshot" == regexField:
+    #             #     #  暂时这么写，正文估计用不着json提取
+    #             #     contentResponse = ArticleUtils.getResponseContents4ContentRegex(webRegexs, jsdata)
+    #             if "publishAt" == regexField:
+    #                 regexfield_time = TimeUtils.convert2Mill4Default(regexfield_temp, "", True)
+    #                 result.append(regexfield_time)
+    #             # if "list" == regexField and  'http' not in regexfield_temp:
+    #             #     regexfield_temp = urljoin(starturl, regexfield_temp)
+    #             else:
+    #                 result.append(regexfield_temp)
+    #     return result
 
     @classmethod
-    def getResponseJsonFieldValue(cls, regexField, webRegexs, jsdata):
-        '''
-        json按规则取元素
-        @regexField:区域名
-        @webRegexs：对应规则
-        @response
-        @starturl:种子链接
-        return：该区域内容
-        '''
-        result = []
-        jsdata = json.loads(jsdata)
-        for regexfield_temp in jsdata:
-            for _webRegex in webRegexs:
-                webRegex = _webRegex.regexContent
-                regexfield_temp = regexfield_temp[webRegex]
-                # if "content" == regexField or "contentSnapshot" == regexField:
-                #     #  暂时这么写，正文估计用不着json提取
-                #     contentResponse = ArticleUtils.getResponseContents4ContentRegex(webRegexs, jsdata)
-                if "publishAt" == regexField:
-                    regexfield_time = TimeUtils.convert2Mill4Default(regexfield_temp, "", True)
-                    result.append(regexfield_time)
-                # if "list" == regexField and  'http' not in regexfield_temp:
-                #     regexfield_temp = urljoin(starturl, regexfield_temp)
+    def getJsonFieldValues(cls, webRegexsDict, json_data):
+        # print(json_data)
+        url_array = []
+        data_dict = {}
+        josn_array = json.loads(json_data)
+        for json_object in josn_array:
+            for (field,webRegexs) in webRegexsDict:
+                webRegex = webRegexs[-1]
+                if "json" != webRegex.regexType:
+                    continue
+                json_field = webRegex.regexContent
+                json_value = json_object[json_field]
+                data_field = webRegex.regexField
+                if "list" == data_field:
+                    url_array.append(json_value)
+                    continue
+                dataValue = None
+                if data_field.endswith("At"):
+                    dataValue = TimeUtils.convert2Mill4Default(json_value, "", True)
                 else:
-                    result.append(regexfield_temp)
-        return result
+                    dataValue = json_value
+                data_array = []
+                if data_field in data_dict:
+                    data_array = data_dict[data_field]
+                data_array.append(dataValue)
+                data_dict[data_field] = data_array
+        return url_array,data_dict
