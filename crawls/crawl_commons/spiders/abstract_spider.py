@@ -85,20 +85,15 @@ class AbstractSpider(object):
         listRegexs = regexDict["list"]
         listRegex = listRegexs[-1]
         json_data = None
+        result_format = None
         if listRegex.regexType == 'json':
-            json_data = ArticleUtils.getJsonContent(listRegexs,response)
+            result_format,json_data = ArticleUtils.getJsonContent(listRegexs,response)
             if StringUtils.isEmpty(json_data):
                 self.log("%s no json regex failed" % response.url)
                 yield
-        # domain = meta["seedInfo"].domain
-        # detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
         detailUrls = None
         listDataAll = {}
-        # for (k, v) in regexDict.items():
-        #     if "nextPage" == k or "list" == k:
-        #         continue
-        #     itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
-        #     listDataAll[k] = itemValues
+
         if json_data is None:
             detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
             for (k, v) in regexDict.items():
@@ -107,13 +102,8 @@ class AbstractSpider(object):
                 itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
                 listDataAll[k] = itemValues
         else:
-            detailUrls, listDataAll = ArticleUtils.getJsonFieldValues(regexDict.items(),json_data)
-            # detailUrls = ArticleUtils.getResponseJsonFieldValue(listRegex.regexField, listRegexs, json_data)
-            # for (k, v) in regexDict.items():
-            #     if "nextPage" == k or "list" == k:
-            #         continue
-            #     itemValues = ArticleUtils.getResponseJsonFieldValue(k, v, json_data)
-            #     listDataAll[k] = itemValues
+            detailUrls, listDataAll = ArticleUtils.getJsonFieldValues(regexDict.items(),result_format,json_data)
+
 
         if detailUrls is None or len(detailUrls)<=0:
             self.log("no detailUrls %s " % response.url)
