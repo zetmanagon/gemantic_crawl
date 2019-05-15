@@ -142,7 +142,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if images is not None and len(images) > 0:
                 ArticleUtils.mergeDict(detailData, "contentImages", images)
         if enableDownloadFile:
-            files = ArticleUtils.getContentFiles(response)
+            files = ArticleUtils.getContentFiles(response,response.url)
             if files is not None and len(files) > 0:
                 ArticleUtils.mergeDict(detailData, "contentFiles", files)
         if enableSnapshot:
@@ -188,7 +188,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         @parm response
         @return url 字典{url：锚文本}
         '''
-        a_tags = response.xpath('//a[text()]')
+        a_tags = response.xpath('//a')
         print('-------------------------------')
         print('所有的链接数目', len(a_tags))
 

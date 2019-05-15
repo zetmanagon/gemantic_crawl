@@ -333,27 +333,68 @@ class ArticleUtils(object):
         images = response.xpath(regexContent).extract()
         return images
 
+    # @classmethod
+    # def getContentFiles(cls, response,url,selector=None):
+    #     if response is not None:
+    #         return ArticleUtils.getContentFiles4Response(response)
+    #
+    #     filesRegex = []
+    #     for postfix in ArticleUtils.FILE_POSTFIXS:
+    #         filesRegex.append('contains(@href,"%s")' % postfix)
+    #     postfixR = " or ".join(filesRegex)
+    #     hrefs = []
+    #     links = []
+    #     alinks = response.xpath('//a[(' + postfixR + ')]')
+    #     if selector is None:
+    #         hrefs = response.xpath('//a[(' + postfixR + ') and (text() or )]').extract()
+    #         links = response.xpath('//a[(' + postfixR + ') and text()]//@href').extract()
+    #     else:
+    #         hrefs = selector.xpath('//a[(' + postfixR + ') and text()]')
+    #         links = selector.xpath('//a[(' + postfixR + ') and text()]//@href')
+    #     # names = response.xpath('//a[' + postfixR + ']//text()').extract()
+    #     if len(links) <= 0:
+    #         return {}
+    #     linkDict = {}
+    #     nameDict = {}
+    #     for i, link in enumerate(links):
+    #         if not ArticleUtils.isFile(link):
+    #             continue
+    #         linkDict[link] = ArticleUtils.getFullUrl(link, url)
+    #         if i < len(hrefs):
+    #             name = ArticleUtils.removeAllTag(str(hrefs[i]))
+    #             nameDict[link] = name
+    #     fileDict = {}
+    #     for (k, v) in linkDict.items():
+    #         contentFileName = ""
+    #         if k in nameDict:
+    #             contentFileName = nameDict[k]
+    #         fileInfo = {"id": ArticleUtils.getArticleId(v), "name": contentFileName, "contentUrl": k, "url": v}
+    #         fileDict[v] = fileInfo
+    #     return fileDict
+
     @classmethod
-    def getContentFiles(cls, response):
+    def getContentFiles(cls, response,referer):
         filesRegex = []
         for postfix in ArticleUtils.FILE_POSTFIXS:
             filesRegex.append('contains(@href,"%s")' % postfix)
         postfixR = " or ".join(filesRegex)
-        hrefs = response.xpath('//a[(' + postfixR + ') and text()]').extract()
-        links = response.xpath('//a[(' + postfixR + ') and text()]//@href').extract()
-        # names = response.xpath('//a[' + postfixR + ']//text()').extract()
-        if len(links) <= 0:
-            return None
-        linkDict = {}
         nameDict = {}
-        for i, link in enumerate(links):
+        linkDict = {}
+        alinks = response.xpath('//a[(' + postfixR + ')]')
+        fileDict = {}
+        if len(alinks) <= 0:
+            return fileDict
+
+        for i, alink in enumerate(alinks):
+            link = "".join(alink.xpath('@href').extract())
             if not ArticleUtils.isFile(link):
                 continue
-            linkDict[link] = ArticleUtils.getFullUrl(link, response.url)
-            if i < len(hrefs):
-                name = ArticleUtils.removeAllTag(hrefs[i])
-                nameDict[link] = name
-        fileDict = {}
+            name = ArticleUtils.removeAllTag("".join(alink.extract()))
+            if StringUtils.isEmpty(name):
+                continue
+            linkDict[link] = ArticleUtils.getFullUrl(link, referer)
+            nameDict[link] = name
+
         for (k, v) in linkDict.items():
             contentFileName = ""
             if k in nameDict:
@@ -678,15 +719,27 @@ class ArticleUtils(object):
             contentRegexs = webRegexs[0:-1]
             json_data = "".join(ArticleUtils.getResponseContents4WebRegex(contentRegexs,response))
         else:
-            json_data = "".join(response.xpath("//html").extract())
+            json_data = response.body_as_unicode()
         if StringUtils.isEmpty(json_data):
             return "",""
 
+        firstObjectStartIndex = -1
+        lastObjectEndIndex = -1
         json_regex = webRegexs[-1]
         if StringUtils.isNotEmpty(json_regex.resultFormat):
-            return json_regex.resultFormat,json_data
+            if json_data.startswith("[{"):
+                return json_regex.resultFormat, json_data
+            # print(json_data)
+            firstObjectStartIndex = json_data.find("{")
+            print("firstObjectStartIndex=",firstObjectStartIndex)
+            if firstObjectStartIndex >= 0:
+                lastObjectEndIndex = json_data.rfind("}")
+                print("lastObjectEndIndex=", lastObjectEndIndex)
+            if firstObjectStartIndex >= 0 and lastObjectEndIndex >= 0:
+                return json_regex.resultFormat, json_data[firstObjectStartIndex:lastObjectEndIndex+1]
+            return json_regex.resultFormat,""
 
-        firstObjectStartIndex = -1
+
         middle_content = "},{"
         start_content = "[{"
         end_content = "}]"
@@ -722,7 +775,7 @@ class ArticleUtils(object):
         lastObjectStartIndex = json_data[firstObjectEndIndex:].rfind(middle_content)+firstObjectEndIndex
         # print("lastObjectStartIndex=",lastObjectStartIndex)
         # if lastObjectStartIndex < 0:
-        lastObjectEndIndex = -1
+
         while lastObjectEndIndex < 0 and lastObjectStartIndex >= 0:
             # print(json_data[lastObjectStartIndex+len(middle_content):])
             lastObjectEndIndex = json_data[lastObjectStartIndex+len(middle_content):].find(end_content)
@@ -740,7 +793,7 @@ class ArticleUtils(object):
 
     @classmethod
     def getJsonFieldValues(cls, webRegexsDict, result_format,json_data):
-        # print(json_data)
+        # print("json_data="+json_data)
         url_array = []
         data_dict = {}
         if json_data.endswith(";"):
@@ -749,11 +802,14 @@ class ArticleUtils(object):
         parse_data = json.loads(json_data)
         json_array = []
         if StringUtils.isEmpty(result_format):
-            json_array = parse_data
+           json_array = parse_data
         else:
-            for parse_d in parse_data:
-                embedded_list = parse_d[result_format]
-                json_array = json_array+embedded_list
+            if json_data.startswith("{"):
+                json_array = parse_data[result_format]
+            else:
+                for parse_d in parse_data:
+                    embedded_list = parse_d[result_format]
+                    json_array = json_array+embedded_list
 
         for json_object in json_array:
             for (field,webRegexs) in webRegexsDict:
@@ -766,6 +822,9 @@ class ArticleUtils(object):
                     json_value = json_object[json_field]
                 data_field = webRegex.regexField
                 if "list" == data_field:
+                    if StringUtils.isNotEmpty(webRegex.resultFilterRegex):
+                        json_value = webRegex.resultFilterRegex.replace("{id}",json_value)
+                        print(json_value)
                     url_array.append(json_value)
                     continue
                 dataValue = None
@@ -779,3 +838,36 @@ class ArticleUtils(object):
                 data_array.append(dataValue)
                 data_dict[data_field] = data_array
         return url_array,data_dict
+
+    @classmethod
+    def getTotalPage(cls, webRegexs, json_data,response):
+        totalPageStr = ""
+        if StringUtils.isEmpty(json_data):
+            totalPageStr = StringUtils.trim(ArticleUtils.getResponseFieldValue("totalPage", True, webRegexs, response))
+        else:
+            parse_data = json.loads(json_data)
+            if webRegexs[-1].regexContent in parse_data:
+                totalPageStr = str(parse_data[webRegexs[-1].regexContent])
+        if StringUtils.isEmpty(totalPageStr):
+            return 0
+        return int(totalPageStr)
+
+    @classmethod
+    def getPaggingUrl(cls, pageNumber,webRegexs,referer):
+        baseUrl = webRegexs[-1].regexContent
+        print(webRegexs)
+        print(baseUrl)
+        if StringUtils.isEmpty(baseUrl):
+            return ""
+        pageUrl = baseUrl.replace("{pageNumber}",str(pageNumber))
+        return urljoin(referer,pageUrl)
+
+    @classmethod
+    def getNextPaggingUrl(cls, currentPageNumber,totalPage, webRegexs, referer):
+        direction = webRegexs[-1].resultFormat
+        replacePageNumber = currentPageNumber+1
+        if StringUtils.isNotEmpty(direction) and "desc" in direction:
+            replacePageNumber = totalPage - currentPageNumber
+        if replacePageNumber < 0:
+            return ""
+        return ArticleUtils.getPaggingUrl(replacePageNumber,webRegexs,referer)

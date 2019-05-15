@@ -15,7 +15,7 @@ import scrapy
 import logging
 import time
 from crawl_commons.monitor.template_monitor import TemplateComparator
-
+from scrapy.selector import Selector
 
 class AbstractSpider(object):
 
@@ -37,6 +37,8 @@ class AbstractSpider(object):
         seeds_meta = self.get_seeds()
         for seed_meta in seeds_meta:
             url = seed_meta["seedInfo"].url
+            if StringUtils.isNotEmpty(seed_meta["seedInfo"].targetUrl):
+                url = seed_meta["seedInfo"].targetUrl
             yield self.do_request(url=url,meta=seed_meta,cleanup=True)
             # yield scrapy.Request(url=url, meta=seed_meta, callback=self.parse)
 
@@ -118,7 +120,7 @@ class AbstractSpider(object):
             if isDetail and not self.isHistory and json_data is not None and i >= self.json_new_max_size:
                 break
             isVaildUrl = True
-            if StringUtils.isNotEmpty(listRegex.resultFilterRegex):
+            if "json" != listRegex.regexType and StringUtils.isNotEmpty(listRegex.resultFilterRegex):
                 isVaildUrl = re.match(listRegex.resultFilterRegex, detailUrl)
             if not isVaildUrl:
                 continue
@@ -140,6 +142,17 @@ class AbstractSpider(object):
                 listDataValue = v[i]
                 if "category" == k and k in listData:
                     listDataValue = listData["category" + "/" + listDataValue]
+                if "content" == k:
+                    listData["contentSnapshot"] = listDataValue
+                    images = ArticleUtils.get_content_image_urls(listDataValue, targetUrl)
+                    if images is not None and len(images) > 0:
+                        listData["contentImages"] = json.dumps(list(images.values()), ensure_ascii=False)
+                    selector = Selector(text=listDataValue)
+                    files = ArticleUtils.getContentFiles(selector,targetUrl)
+                    if files is not None and len(files)>0:
+                        listData["contentFiles"] = json.dumps(list(files.values()), ensure_ascii=False)
+                    listDataValue = ArticleUtils.removeTag4Content(listDataValue)
+                    # print("listDataValue="+listDataValue)
                 listData[k] = listDataValue
             metaCopy["listData"] = listData
             metaCopy["contentPageNumber"] = 1
@@ -150,6 +163,10 @@ class AbstractSpider(object):
             metaCopy["renderSeconds"] = listRegex.renderSeconds
             # metaCopy["renderBrowser"] = listRegex.renderBrowser
             if ArticleUtils.isFile(targetUrl):
+                self.crawlDB.saveFileCrawlDetail(metaCopy, targetUrl)
+            elif "content" in listData and StringUtils.isNotEmpty(listData["content"]):
+                # print("--------------",targetUrl)
+                metaCopy['parse'] = 'detail'
                 self.crawlDB.saveFileCrawlDetail(metaCopy, targetUrl)
             elif isDetail:
                 metaCopy['parse'] = 'detail'
@@ -163,6 +180,17 @@ class AbstractSpider(object):
 
         maxPageNumber = 0
         nextPageRegex = []
+        if self.isHistory and "pagingUrl" in regexDict and "totalPage" in regexDict:
+            totalPageRegexs = regexDict["totalPage"]
+            maxPageNumber = ArticleUtils.getTotalPage(totalPageRegexs,json_data,response)
+            pagingUrlRegexs = regexDict["pagingUrl"]
+            if maxPageNumber > 1 and maxPageNumber > pageNumber:
+                targetNextUrl = ArticleUtils.getNextPaggingUrl(pageNumber,maxPageNumber,pagingUrlRegexs,seed.url)
+                if StringUtils.isNotEmpty(targetNextUrl):
+                    meta["pageNumber"] = pageNumber + 1
+                    yield self.do_request(url=targetNextUrl, meta=meta)
+
+
         if "nextPage" in regexDict:
             nextPageRegex = regexDict["nextPage"]
             maxPageNumber = nextPageRegex[-1].maxPageNumber
@@ -225,7 +253,7 @@ class AbstractSpider(object):
         pageContentImages = None
         contentData = {}
         if enableDownloadFile:
-            files = ArticleUtils.getContentFiles(response)
+            files = ArticleUtils.getContentFiles(response,response.url)
             if files is not None and len(files) > 0:
                 contentData["contentFiles"] = files
                 # ArticleUtils.mergeDict(detailData, "contentFiles", files)

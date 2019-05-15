@@ -51,6 +51,7 @@ class WebSeed:
         self.site = jsonData["site"]
         self.domain = jsonData["domain"]
         self.url = str(jsonData["url"])
+        self.targetUrl = str(jsonData["targetUrl"])
         self.organization = jsonData["organization"]
         self.urlMethod = str(jsonData["urlMethod"])
         self.enableDownloadFile = int(jsonData["enableDownloadFile"])
