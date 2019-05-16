@@ -817,21 +817,35 @@ class ArticleUtils(object):
 
 
     @classmethod
-    def getPaggingUrl(cls, pageNumber,webRegexs,referer):
+    def getPaggingUrl(cls, pageNumber,paramDict,webRegexs,referer):
         baseUrl = webRegexs[-1].regexContent
         # print(webRegexs)
         # print(baseUrl)
         if StringUtils.isEmpty(baseUrl):
             return ""
         pageUrl = baseUrl.replace("{pageNumber}",str(pageNumber))
+        if paramDict is not None and len(paramDict) > 0:
+            for (k,v) in paramDict.items():
+                pageUrl = pageUrl.replace("{"+k+"}",v)
         return urljoin(referer,pageUrl)
 
     @classmethod
-    def getNextPaggingUrl(cls, currentPageNumber,totalPage, webRegexs, referer):
+    def getPaggingUrlParams(cls, regexDict,response):
+        paramDict = {}
+        for (k,v) in regexDict.items():
+            if k == "pagingUrl" or not k.startswith("pagingUrl"):
+                continue
+            param = StringUtils.trim(ArticleUtils.removeAllTag("".join(ArticleUtils.getResponseFieldValue(k, True, v, response))))
+            if StringUtils.isNotEmpty(param):
+                paramDict[k] = param
+        return paramDict
+
+    @classmethod
+    def getNextPaggingUrl(cls, currentPageNumber,totalPage, webRegexs,pagingUrlParams, referer):
         direction = webRegexs[-1].resultFormat
         replacePageNumber = currentPageNumber+1
         if StringUtils.isNotEmpty(direction) and "desc" in direction:
             replacePageNumber = totalPage - currentPageNumber
         if replacePageNumber < 0:
             return ""
-        return ArticleUtils.getPaggingUrl(replacePageNumber,webRegexs,referer)
+        return ArticleUtils.getPaggingUrl(replacePageNumber,pagingUrlParams,webRegexs,referer)

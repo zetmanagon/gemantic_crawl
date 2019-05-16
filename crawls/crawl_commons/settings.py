@@ -204,4 +204,4 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 # HTTPERROR_ALLOWED_CODES = [304,302,301,404]
 # REDIRECT_ENABLED = False
-LOG_FILE='/home/yhye/tmp/scrapy.log'
+# LOG_FILE='/home/yhye/tmp/scrapy.log'
