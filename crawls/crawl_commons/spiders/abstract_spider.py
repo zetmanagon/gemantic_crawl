@@ -99,7 +99,7 @@ class AbstractSpider(object):
         if json_data is None:
             detailUrls = ArticleUtils.getResponseContents4WebRegex(listRegexs, response)
             for (k, v) in regexDict.items():
-                if "nextPage" == k or "list" == k:
+                if "nextPage" == k or "list" == k or "totalPage" == k or "pagingUrl" == k:
                     continue
                 itemValues = ArticleUtils.getResponseFieldValue(k, False, v, response)
                 listDataAll[k] = itemValues
@@ -178,30 +178,27 @@ class AbstractSpider(object):
                 yield self.do_request(url=targetUrl, meta=metaCopy,cleanup=True)
 
 
-        maxPageNumber = 0
-        nextPageRegex = []
-        if self.isHistory and "pagingUrl" in regexDict and "totalPage" in regexDict:
-            totalPageRegexs = regexDict["totalPage"]
-            maxPageNumber = ArticleUtils.getTotalPage(totalPageRegexs,json_data,response)
-            pagingUrlRegexs = regexDict["pagingUrl"]
-            if maxPageNumber > 1 and maxPageNumber > pageNumber:
-                targetNextUrl = ArticleUtils.getNextPaggingUrl(pageNumber,maxPageNumber,pagingUrlRegexs,seed.url)
-                if StringUtils.isNotEmpty(targetNextUrl):
-                    meta["pageNumber"] = pageNumber + 1
-                    yield self.do_request(url=targetNextUrl, meta=meta)
+        if self.isHistory:
+            nextPageUrl = None
+            if "pagingUrl" in regexDict and "totalPage" in regexDict:
+                totalPageRegexs = regexDict["totalPage"]
+                totalPageNumber = ArticleUtils.getTotalPage(totalPageRegexs,json_data,response)
+                self.LOG.info("totalPageNumber %d" % totalPageNumber)
+                pagingUrlRegexs = regexDict["pagingUrl"]
+                if totalPageNumber > 1 and totalPageNumber > pageNumber:
+                    targetNextUrl = ArticleUtils.getNextPaggingUrl(pageNumber,totalPageNumber,pagingUrlRegexs,seed.url)
+                    if StringUtils.isNotEmpty(targetNextUrl):
+                        nextPageUrl = targetNextUrl
+            elif "nextPage" in regexDict:
+                nextPageRegex = regexDict["nextPage"]
+                pageNumber = pageNumber + 1
+                nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex, pageNumber)
+                if len(nextUrls) > 0 and StringUtils.isNotEmpty(nextUrls[0]):
+                    nextPageUrl = nextUrls[0]
 
-
-        if "nextPage" in regexDict:
-            nextPageRegex = regexDict["nextPage"]
-            maxPageNumber = nextPageRegex[-1].maxPageNumber
-        if self.isHistory and ((maxPageNumber > 0 and pageNumber <= maxPageNumber) or maxPageNumber <= 0):
-            meta["pageNumber"] = pageNumber + 1
-            nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex, response,meta["pageNumber"])
-            if len(nextUrls) > 0 and StringUtils.isNotEmpty(nextUrls[0]):
-                targetNextUrl = nextUrls[0]
-                self.LOG.info("nextPage %s" % targetNextUrl)
-                yield self.do_request(url=targetNextUrl, meta=meta)
-                # yield scrapy.Request(url=targetNextUrl, meta=meta, callback=self.parse)
+            if StringUtils.isNotEmpty(nextPageUrl):
+                meta["pageNumber"] = pageNumber + 1
+                yield self.do_request(url=nextPageUrl, meta=meta)
             else:
                 self.LOG.info("lastPage %s" % (response.url))
 

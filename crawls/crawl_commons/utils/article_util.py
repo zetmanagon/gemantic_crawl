@@ -805,7 +805,7 @@ class ArticleUtils(object):
     def getTotalPage(cls, webRegexs, json_data,response):
         totalPageStr = ""
         if StringUtils.isEmpty(json_data):
-            totalPageStr = StringUtils.trim(ArticleUtils.getResponseFieldValue("totalPage", True, webRegexs, response))
+            totalPageStr = StringUtils.trim(ArticleUtils.removeAllTag("".join(ArticleUtils.getResponseFieldValue("totalPage", True, webRegexs, response))))
         else:
             parse_data = json.loads(json_data)
             if webRegexs[-1].regexContent in parse_data:
@@ -814,11 +814,13 @@ class ArticleUtils(object):
             return 0
         return int(totalPageStr)
 
+
+
     @classmethod
     def getPaggingUrl(cls, pageNumber,webRegexs,referer):
         baseUrl = webRegexs[-1].regexContent
-        print(webRegexs)
-        print(baseUrl)
+        # print(webRegexs)
+        # print(baseUrl)
         if StringUtils.isEmpty(baseUrl):
             return ""
         pageUrl = baseUrl.replace("{pageNumber}",str(pageNumber))
