@@ -693,7 +693,7 @@ class ArticleUtils(object):
                 return json_regex.resultFormat, json_data
             # print(json_data)
             firstObjectStartIndex = json_data.find("{")
-            print("firstObjectStartIndex=",firstObjectStartIndex)
+            # print("firstObjectStartIndex=",firstObjectStartIndex)
             if firstObjectStartIndex >= 0:
                 lastObjectEndIndex = json_data.rfind("}")
                 print("lastObjectEndIndex=", lastObjectEndIndex)
