@@ -53,6 +53,7 @@ class WebSeed:
         self.url = str(jsonData["url"])
         self.targetUrl = str(jsonData["targetUrl"])
         self.pagingUrl = str(jsonData["pagingUrl"])
+        self.pagingStartNumber = int(jsonData["pagingStartNumber"])
         self.organization = jsonData["organization"]
         self.urlMethod = str(jsonData["urlMethod"])
         self.enableDownloadFile = int(jsonData["enableDownloadFile"])

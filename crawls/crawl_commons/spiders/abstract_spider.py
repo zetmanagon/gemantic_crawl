@@ -60,7 +60,7 @@ class AbstractSpider(object):
             meta["timestamp"] = timestamp
             meta["seedRegex"] = regex
             meta["depthNumber"] = 0
-            meta["pageNumber"] = 1
+            meta["pageNumber"] = seed.pagingStartNumber
             meta["seedInfo"] = seed
             meta["renderType"] = seed.renderType
             meta["pageRenderType"] = seed.pageRenderType
@@ -181,15 +181,34 @@ class AbstractSpider(object):
         if self.isHistory:
 
             if StringUtils.isNotEmpty(seed.pagingUrl):
-                if len(detailUrls) > 0:
-                    pageNumber = pageNumber + 1
-                    targetNextUrl = seed.pagingUrl.replace("{pageNumber}",str(pageNumber))
-                    metaCopy = meta.copy()
-                    metaCopy["pageNumber"] = pageNumber
-                    if metaCopy["pageRenderType"] == 1:
-                        metaCopy["pageRenderType"] = 0
-                    self.LOG.info("pagingUrl %d %s" % (pageNumber, targetNextUrl))
-                    yield self.do_request(url=targetNextUrl, meta=metaCopy)
+                if "totalPage" not in regexDict:
+                    if len(detailUrls) > 0:
+                        pageNumber = pageNumber + 1
+                        targetNextUrl = seed.pagingUrl.replace("{pageNumber}",str(pageNumber))
+                        metaCopy = meta.copy()
+                        metaCopy["pageNumber"] = pageNumber
+                        if metaCopy["pageRenderType"] == 1:
+                            metaCopy["pageRenderType"] = 0
+                        self.LOG.info("pagingUrl %d %s" % (pageNumber, targetNextUrl))
+                        yield self.do_request(url=targetNextUrl, meta=metaCopy)
+                elif pageNumber <= 1:
+                    totalPageRegexs = regexDict["totalPage"]
+                    totalPageNumber = ArticleUtils.getTotalPage(totalPageRegexs, json_data, response)
+                    self.LOG.info("totalPageNumber %d" % totalPageNumber)
+                    if totalPageNumber > 1:
+                        while totalPageNumber > pageNumber:
+                            pageNumber = pageNumber + 1
+                            targetNextUrl = seed.pagingUrl.replace("{pageNumber}",str(pageNumber))
+                            if StringUtils.isEmpty(targetNextUrl):
+                                break
+                            metaCopy = meta.copy()
+                            metaCopy["pageNumber"] = pageNumber
+                            if metaCopy["pageRenderType"] == 1:
+                                metaCopy["pageRenderType"] = 0
+                            self.LOG.info("pagingUrl %d %s" % (pageNumber, targetNextUrl))
+                            yield self.do_request(url=targetNextUrl, meta=metaCopy)
+
+
             elif "pagingUrl" in regexDict:
                 pagingUrlRegexs = regexDict["pagingUrl"]
                 if "totalPage" not in regexDict:
