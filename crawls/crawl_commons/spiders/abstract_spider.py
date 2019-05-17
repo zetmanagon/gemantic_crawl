@@ -171,10 +171,8 @@ class AbstractSpider(object):
             elif isDetail:
                 metaCopy['parse'] = 'detail'
                 yield self.do_request(url=targetUrl,meta=metaCopy)
-                # yield scrapy.Request(url=targetUrl, meta=metaCopy, callback=self.parseDetail)
             else:
                 self.LOG.info("next level %s" % targetUrl)
-                # yield scrapy.Request(url=targetUrl, meta=metaCopy, callback=self.parse)
                 yield self.do_request(url=targetUrl, meta=metaCopy,cleanup=True)
 
 
