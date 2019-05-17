@@ -153,9 +153,9 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         if  contentPageNumber < 100:
             meta["contentPageNumber"] = contentPageNumber + 1
             nextpage_urls = ArticleUtils.getNextPageUrl('', response,meta["contentPageNumber"])
-        if len(nextpage_urls) != 0:
+        if len(nextpage_urls) > 0:
             meta["detailData"] = detailData
-            yield scrapy.Request(url=nextpage_urls, meta=meta, callback=self.parseDetail)
+            yield scrapy.Request(url=nextpage_urls[0], meta=meta, callback=self.parseDetail)
         else:
             item = ArticleUtils.meta2item(meta, detailData["url"])
             for (k, v) in detailData.items():

@@ -24,10 +24,10 @@ class ArticleUtils(object):
     FILE_PATTERN = re.compile(u'.*?\.(pdf|doc|xls|xlsx|docx|pptx|ppt|)$')
     FILE_POSTFIXS = [".pdf",".doc",".xls",".xlsx",".docx",".pptx",".ppt",".PDF",".DOC",".XLS",".XLSX",".DOCX",".PPTX",".PPT"]
     MERGE_FIELD = ["content","contentImages","contentFiles","contentSnapshot"]
-    PAGE_CONTENT = [">上页<", ">上一页<", ">下页<", ">下一页<",">末页<",">尾页<",">首页<",">前一页<",">后一页<"]
-    COMMON_NEXT_PAGE_REGEX = [WebRegex({"regexType":"xpath","regexField":"nextPage", "regexContent":'//a[contains(text(),"下一页") or contains(text(),"下页") or contains(text(),"后一页")]//@href',"resultFormat":"","pageRenderType":0,"renderSeconds":"0","renderType":"0","renderBrowser":"","regexSort":"0","depthNumber" :"0","resultFilterRegex":"","maxPageNumber":"0"})]
+    PAGE_CONTENT = [">上页<", ">上一页<", ">下页<", ">下一页<",">末页<",">尾页<",">首页<",">前一页<",">后一页<",">前页<",">后页<"]
+    COMMON_NEXT_PAGE_REGEX = [WebRegex({"regexType":"xpath","regexField":"nextPage", "regexContent":'//a[contains(text(),"下一页") or contains(text(),"下页") or contains(text(),"后一页") or contains(text(),"后页")]//@href|//input[contains(@value,"后页") or contains(@value,"后一页") or contains(@value,"下页") or contains(@value,"下一页")]//@onclick',"resultFormat":"","pageRenderType":0,"renderSeconds":"0","renderType":"0","renderBrowser":"","regexSort":"0","depthNumber" :"0","resultFilterRegex":"","maxPageNumber":"0"})]
     ERROR_PAGE_PATTERN = re.compile(u'.*?(404|服务器错误|状态页面|页面找不到|页面没有找到|no-title).*')
-    ERROR_PAGE_TITLE_PATTERN = re.compile(u'.*?(首页|末页|上一页|下一页|上页|下页|尾页|后一页|前一页).*')
+    ERROR_PAGE_TITLE_PATTERN = re.compile(u'.*?(首页|末页|上一页|下一页|上页|下页|尾页|后一页|前一页|前页|后页).*')
 
     ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|请用新域名访问|BadGateway|BadRequest|ErrorPage).*')
 
@@ -104,7 +104,7 @@ class ArticleUtils(object):
 
     @classmethod
     def getHtmlSpecialTag(cls, html, response):
-        footers = response.xpath('//footer|//div[contains(@class,"footer")]').extract()
+        footers = response.xpath('//footer|//div[contains(@class,"footer")]|//form').extract()
         # 引用外部源
         blockquotes = response.xpath('//blockquote|//script|//noscript').extract()
         # 隐含网页文本去掉
@@ -459,9 +459,17 @@ class ArticleUtils(object):
             for nextUrl in nextUrls:
                 if StringUtils.isEmpty(nextUrl):
                     continue
-                if "javascript:" in nextUrl:
+                nextUrlTmp = nextUrl
+                nextUrlStartIndex = nextUrlTmp.find("'")
+                if nextUrlStartIndex >= 0:
+                    nextUrlEndIndex = nextUrlTmp.rfind("'")
+                    if nextUrlEndIndex > nextUrlStartIndex:
+                        nextUrlTmp = nextUrlTmp[nextUrlStartIndex+1:nextUrlEndIndex]
+                    else:
+                        nextUrlTmp = nextUrlTmp[nextUrlStartIndex+1:]
+                if "javascript:" in nextUrlTmp:
                     continue
-                nextUrlTmp = nextUrl.replace('"', "")
+                nextUrlTmp = nextUrlTmp.replace('"', "")
                 nextUrlTmp = nextUrlTmp.replace("'", "")
                 if StringUtils.isEmpty(nextUrlTmp):
                     continue
@@ -486,7 +494,7 @@ class ArticleUtils(object):
         # print(nextUrls)
         targetNextUrls = ArticleUtils.cleanPageUrl(nextUrls, resultFilterRegex, response)
         # print(targetNextUrls)
-        if targetNextUrls == [] and currentPage is not None:
+        if len(targetNextUrls) <= 0 and currentPage is not None:
             # print("a[contains(text(),'%d页') or text()='%d']//@href"%(currentPage+1,currentPage+1))
             nextUrls = response.xpath(
                 "//a[contains(text(),'%d页') or text()='%d']//@href" % (currentPage + 1, currentPage + 1)).extract()
