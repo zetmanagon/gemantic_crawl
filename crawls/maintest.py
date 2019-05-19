@@ -3,17 +3,30 @@ from crawl_commons.repository.filedownload import *
 from crawl_commons.utils.article_util import *
 from crawl_commons.utils.time_util import *
 from crawl_commons.utils.http_util import *
+from urllib.parse import *
 import copy
 import json
 import sys
-print(sys.path)
-print(sys.modules.keys())
-print("--------------------------")
-print(ArticleUtils.removeAllTag("dfs<ab>aaa<cd><!-- <h2 class=\"cont_title\">河北省人民政府关于印发《河北省人口发展规划（2018-2035年）》的通知</h2> -->"))
-print("--------------------------")
+# print(sys.path)
+# print(sys.modules.keys())
+# print("--------------------------")
+# print(ArticleUtils.removeAllTag("dfs<ab>aaa<cd><!-- <h2 class=\"cont_title\">河北省人民政府关于印发《河北省人口发展规划（2018-2035年）》的通知</h2> -->"))
+# print("--------------------------")
 aa = ["abc","d","sdfadsdf"]
 aa = sorted(aa,key=lambda x:len(x),reverse=True)
 print(aa)
+print(aa[0:-1])
+# print(aa[0:-1])
+bb = "var channelId=15464;	var pageSize=20;	var channelpageTotal=parseInt(10);111,[{sdfaf},{sdfadsf},{sdf:'sdfad'},{dddd}]var pagesData={\"next\":2,\"curPageNo\":1,\"previous\":1,\"pageTotal\":15,\"start\":1,\"end\":10};	var pageTotal=parseInt(15);"
+first = bb.find("},{")
+last = bb.rfind("},{")
+print(bb[:first])
+print("-------------")
+print(bb[first+len("},{"):])
+print("-------------")
+print(bb[last+len("},{"):])
+print("-------------")
+print(bb[first:last+len("},{")])
 # seedRepositroy = SeedRepository()
 # crawlRegexDict = seedRepositroy.get_regex("http://finance.sina.com.cn/zl/")
 # for i,v in enumerate(crawlRegexDict):
@@ -45,8 +58,8 @@ print(aa)
 # url = ArticleUtils.getFullUrl("http://sousuo.gov.cn/list.htm?q=&n=15&p=1&t=paper&sort=pubtime&childtype=&subchildtype=&pcodeJiguan=&pcodeYear=&pcodeNum=&location=&searchfield=&title=&content=&pcode=&puborg=&timetype=timeqb&mintime=&maxtime=","http://sousuo.gov.cn/list.htm?q=&n=15&p=0&t=paper&sort=pubtime&childtype=&subchildtype=&pcodeJiguan=&pcodeYear=&pcodeNum=&location=&searchfield=&title=&content=&pcode=&puborg=&timetype=timeqb&mintime=&maxtime=")
 #
 # print(url)
-
-file = "sdfaf.doc"
+print(urljoin("http://www.guiyang.gov.cn/gygov/openapi/info/ajaxpagelist.do?pagesize=15&channelid=14896","?pageno=1"))
+# file = "sdfaf.doc"
 # dr = re.compile(u'.*?\.(pdf|doc|xls|xlsx|docx|pptx|ppt|)$')
 # result = dr.match(file)
 # print(result)
@@ -80,15 +93,15 @@ file = "sdfaf.doc"
 # content = 'safsdfsaf<script type="text/javascript">function videoChange(){	$("playbtn_img").css({"left":((document.documentElement.clientWidth-20)-70)/2+"px","top":(300-70)/2+"px"});	$("#video_content_is_loading").css({"left":((document.documentElement.clientWidth-20)-120)/2+"px","top":(300-120)/2+"px"});}$(window).resize(function(){ videoChange();})function isAppendSpace(i){console.log(i);$("#playbtn_img").length>0? videoChange() : "";i-- && i>=0 && $("#playbtn_img").length == 0 ? setTimeout(function(){isAppendSpace(i)},500) : "";}isAppendSpace(5);</script>'
 # print(ArticleUtils.removeTag4Content(content))
 
-content2 = 'sfda<p align="center"><font color="#0000cc">图表6：2005年度部分国家军人人均国防费（金额单位：千美元） 新华社发<p align="center"><a href="307878.htm">1</a>  <a href="307878_1.htm">2</a>  <a href="307878_2.htm">3</a>  <a href="307878_3.htm">4</a>  <a href="307878_4.htm">5</a>  <a href="307878_5.htm">6</a>  <a href="307878_6.htm">7</a>  <a href="307878_7.htm">8</a>  <a href="307878_8.htm">9</a>  <a href="307878_9.htm">10</a>  <a href="307878.htm">首页</a>  <a href="307878_7.htm">上页</a>  <a href="307878_9.htm">下页</a>  <a href="307878_9.htm">末页</a></p>  </font></p>'
-# <div [^>]*id='footer'[^>]*>(<div[^>]*>(<div[^>]*>.*?</div>|.)*?</div>|.)*?</div>
-dr = re.compile(u'<p.*?>.*?(<p.*?>.*?(>上页</|>上一页</|>下页</|>下一页</).*?</p>).*?</p>',re.S)
-content2 = dr.sub(u"", content2)
-print(content2)
-
-print(ArticleUtils.getArticleId("http://www.mofcom.gov.cn/article/zhengcejd/bq/200407/20040700250926.shtml"))
-
-print(HttpUtils.get_ip_address())
+# content2 = 'sfda<p align="center"><font color="#0000cc">图表6：2005年度部分国家军人人均国防费（金额单位：千美元） 新华社发<p align="center"><a href="307878.htm">1</a>  <a href="307878_1.htm">2</a>  <a href="307878_2.htm">3</a>  <a href="307878_3.htm">4</a>  <a href="307878_4.htm">5</a>  <a href="307878_5.htm">6</a>  <a href="307878_6.htm">7</a>  <a href="307878_7.htm">8</a>  <a href="307878_8.htm">9</a>  <a href="307878_9.htm">10</a>  <a href="307878.htm">首页</a>  <a href="307878_7.htm">上页</a>  <a href="307878_9.htm">下页</a>  <a href="307878_9.htm">末页</a></p>  </font></p>'
+# # <div [^>]*id='footer'[^>]*>(<div[^>]*>(<div[^>]*>.*?</div>|.)*?</div>|.)*?</div>
+# dr = re.compile(u'<p.*?>.*?(<p.*?>.*?(>上页</|>上一页</|>下页</|>下一页</).*?</p>).*?</p>',re.S)
+# content2 = dr.sub(u"", content2)
+# print(content2)
+#
+# print(ArticleUtils.getArticleId("http://www.mofcom.gov.cn/article/zhengcejd/bq/200407/20040700250926.shtml"))
+#
+# print(HttpUtils.get_ip_address())
 #print(re.match(".*?\?\d+","http://www.mofcom.gov.cn/article/ae/ag/2"))
 # filesRegex = []
 # for postfix in ArticleUtils.FILE_POSTFIXS:
