@@ -372,7 +372,7 @@ class AbstractSpider(object):
                 if len(nextUrls) > 0 and StringUtils.isNotEmpty(nextUrls[0]):
                     targetNextUrl = nextUrls[0]
             #防止死循环翻页
-            if StringUtils.isNotEmpty(targetNextUrl) and contentPageNumber <= 100:
+            if StringUtils.isNotEmpty(targetNextUrl) and contentPageNumber <= 100 and targetNextUrl != response.url:
                 meta["detailData"] = detailData
                 meta["autoDetailData"] = autoDetailData
                 self.LOG.info("detail nextPage %s %s" % (str(contentPageNumber + 1), targetNextUrl))
