@@ -244,7 +244,7 @@ class AbstractSpider(object):
             elif "nextPage" in regexDict:
                 nextPageRegex = regexDict["nextPage"]
                 pageNumber = pageNumber + 1
-                nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex, pageNumber)
+                nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex,response, pageNumber)
                 if len(nextUrls) > 0 and StringUtils.isNotEmpty(nextUrls[0]):
                     nextPageUrl = nextUrls[0]
                     meta["pageNumber"] = pageNumber + 1

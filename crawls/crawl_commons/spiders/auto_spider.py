@@ -76,7 +76,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         if self.isHistory:
             # 如果有下一页,爬下一页
             meta["pageNumber"] = meta["pageNumber"]+1
-            nextpage_urls = ArticleUtils.getNextPageUrl('', response,  meta["pageNumber"])
+            nextpage_urls = ArticleUtils.getNextPageUrl([], response,  meta["pageNumber"])
             for url in nextpage_urls:
                 self.log("nextPage %s" % url)
                 meta['is_Nextpage'] = True
@@ -153,7 +153,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         if  contentPageNumber < 100:
             meta["contentPageNumber"] = contentPageNumber + 1
             nextpage_urls = ArticleUtils.getNextPageUrl('', response,meta["contentPageNumber"])
-        if len(nextpage_urls) > 0:
+        if len(nextpage_urls) > 0 and nextpage_urls[0] != response.url:
             meta["detailData"] = detailData
             yield scrapy.Request(url=nextpage_urls[0], meta=meta, callback=self.parseDetail)
         else:
