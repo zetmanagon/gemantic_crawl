@@ -104,7 +104,7 @@ class ArticleUtils(object):
 
     @classmethod
     def getHtmlSpecialTag(cls, html, response):
-        footers = response.xpath('//footer|//div[contains(@class,"footer")]|//form').extract()
+        footers = response.xpath('//footer|//*[@class="footer"]|//form').extract()
         # 引用外部源
         blockquotes = response.xpath('//blockquote|//script|//noscript').extract()
         # 隐含网页文本去掉
