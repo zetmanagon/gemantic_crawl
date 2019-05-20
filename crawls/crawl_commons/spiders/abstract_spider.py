@@ -241,12 +241,15 @@ class AbstractSpider(object):
                             self.LOG.info("pagingUrl %d %s" % (pageNumber,targetNextUrl))
                             yield self.do_request(url=targetNextUrl, meta=metaCopy)
 
-            elif "nextPage" in regexDict:
-                nextPageRegex = regexDict["nextPage"]
+            else:
+                nextPageRegex = None
+                if "nextPage" in regexDict:
+                    nextPageRegex = regexDict["nextPage"]
                 pageNumber = pageNumber + 1
                 nextUrls = ArticleUtils.getNextPageUrl(nextPageRegex,response, pageNumber)
                 if len(nextUrls) > 0 and StringUtils.isNotEmpty(nextUrls[0]):
                     nextPageUrl = nextUrls[0]
+                    self.LOG.info("nextPageUrl %d %s" % (pageNumber, nextPageUrl))
                     meta["pageNumber"] = pageNumber + 1
                     yield self.do_request(url=nextPageUrl, meta=meta)
 
