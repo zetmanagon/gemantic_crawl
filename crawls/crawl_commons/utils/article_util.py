@@ -110,7 +110,7 @@ class ArticleUtils(object):
         # 隐含网页文本去掉
         displayNones = response.xpath('//*[contains(@style,"display:none")]').extract()
         # 微信分享
-        wechatNodes = response.xpath("//*[@data-wechat]").extract()
+        wechatNodes = response.xpath('//*[@data-wechat]|//*[@id="wechat"]').extract()
         allnodes = footers + blockquotes + displayNones + wechatNodes
         # allnodes = sorted(allnodes, key=lambda x: len(x), reverse=True)
         return allnodes
