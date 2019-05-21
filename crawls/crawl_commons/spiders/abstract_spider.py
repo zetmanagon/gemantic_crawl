@@ -382,6 +382,9 @@ class AbstractSpider(object):
                 yield self.do_request(url=url, meta=meta,dont_filter=False,cleanup=True)
                 # yield scrapy.Request(url=targetNextUrl, meta=meta, callback=self.parseDetail)
             else:
+                detailImages = None
+                if "contentImages" in detailData:
+                    detailImages = detailData["contentImages"]
                 item = ArticleUtils.meta2item(meta, detailData["url"])
                 for (k, v) in detailData.items():
                     itemValue = None
@@ -392,9 +395,9 @@ class AbstractSpider(object):
                     else:
                         itemValue = v
                     item[k] = itemValue
-                detailImages = None
-                if "contentImages" in detailData:
-                    detailImages = detailData["contentImages"]
+                    if "content" == k and (StringUtils.isNotEmpty(ArticleUtils.removeAllTag(str(item[k]))) or detailImages is not None):
+                        item["contentParser"] = "rules"
+
                 for (k, v) in autoDetailData.items():
                     if detailImages is not None and ("content" == k or "contentSnapshot" == k):
                         continue

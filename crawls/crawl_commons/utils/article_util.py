@@ -559,6 +559,7 @@ class ArticleUtils(object):
                 if enableSnapshot:
                     autoDetail["contentSnapshot"] = contentSnapshot.replace("<html>", "").replace("</html>","").replace("<body>","").replace("</body>", "")
                 autoDetail["content"] = ArticleUtils.removeTag4Content(contentSnapshot)
+                autoDetail["contentParser"] = "readability"
                 if enableDownloadImage:
                     autoDetail["contentImages"] = ArticleUtils.get_content_image_urls(contentSnapshot, response.url)
         except Exception as e:

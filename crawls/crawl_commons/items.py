@@ -37,3 +37,4 @@ class CrawlResultItem(scrapy.Item):
     timestamp = scrapy.Field()
     parse = scrapy.Field()
     html = scrapy.Field()
+    contentParser = scrapy.Field()

@@ -127,12 +127,14 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             detailData["url"] = url
         content_snap = doc.summary()
         content = ""
+        contentParser = "readability"
         if len(ArticleUtils.removeTag4Content(content_snap).strip()) < 3 or meta['newspaper']:
             article = Article(response.url, language='zh', keep_article_html=True, fetch_images=False)
             article.download(input_html=html_remove4content)
             article.parse()
             content = ArticleUtils.removeTag4Content(article.text)
             content_snap = article.article_html
+            contentParser = "newspaper"
         else:
             content = ArticleUtils.removeTag4Content(content_snap)  # 如果没用newspaper，将快照去标签作正文
 
@@ -168,6 +170,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                     itemValue = v
                 item[k] = itemValue
             item['html'] = html
+            item["contentParser"] = contentParser
             item["headTitle"] = StringUtils.trim(
                 ArticleUtils.removeAllTag("".join(response.xpath("//title//text()").extract())))
             yield item
