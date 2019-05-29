@@ -392,9 +392,10 @@ class AbstractSpider(object):
                         itemValue = item[k] + "/" + v
                     elif "contentImages" == k or "contentFiles" == k:
                         itemValue = json.dumps(list(v.values()), ensure_ascii=False)
-                    else:
+                    elif k not in item:
                         itemValue = v
-                    item[k] = itemValue
+                    if itemValue is not None:
+                        item[k] = itemValue
                     if "content" == k and (StringUtils.isNotEmpty(ArticleUtils.removeAllTag(str(item[k]))) or detailImages is not None):
                         item["contentParser"] = "rules"
 

@@ -108,6 +108,7 @@ class TimeUtils(object):
         @return 时间戳
         '''
         # print(html)
+        now = TimeUtils.getNowMill()
         link_list = re.findall(
             r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",
             html)
@@ -123,6 +124,8 @@ class TimeUtils(object):
                 timMill = TimeUtils.convert2Mill4Default(timeAtLine, "", True)
             except OverflowError:
                 timMill = 0
+            if timMill >= now:
+                continue
             timelist.append(timMill)
         if index != -1 and len(timelist) > index:
             return timelist[index]
@@ -130,7 +133,7 @@ class TimeUtils(object):
             while 0 in timelist:
                 timelist.remove(0)
         for timMill in timelist:  # 取最新的时间
-            if TimeUtils.getNowMill() - timMill > 86400000:  # 时间如果大于24小时，直接用
+            if now - timMill > 86400000:  # 时间如果大于24小时，直接用
                 return timMill
             elif time.localtime(time.time()).tm_mday - time.localtime(timMill / 1000).tm_mday > 1:  # 时间没小于24h但是隔天，直接用
                 return timMill
