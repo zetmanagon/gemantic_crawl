@@ -774,15 +774,18 @@ class ArticleUtils(object):
             json_data = json_data[:-1]
         # print(json_data)
         parse_data = json.loads(json_data)
-        json_array = []
-        if StringUtils.isEmpty(result_format):
-           json_array = parse_data
-        else:
+        json_array = parse_data
+        if StringUtils.isNotEmpty(result_format):
+            result_formats = result_format.split(".")
             if json_data.startswith("{"):
-                json_array = parse_data[result_format]
+                for rf in result_formats:
+                    json_array = json_array[rf]
+
             else:
                 for parse_d in parse_data:
-                    embedded_list = parse_d[result_format]
+                    embedded_list = parse_d
+                    for rf in result_formats:
+                        embedded_list = embedded_list[rf]
                     json_array = json_array+embedded_list
 
         for json_object in json_array:
@@ -820,8 +823,13 @@ class ArticleUtils(object):
             totalPageStr = StringUtils.trim(ArticleUtils.removeAllTag("".join(ArticleUtils.getResponseFieldValue("totalPage", True, webRegexs, response))))
         else:
             parse_data = json.loads(json_data)
-            if webRegexs[-1].regexContent in parse_data:
-                totalPageStr = str(parse_data[webRegexs[-1].regexContent])
+            webRegex = webRegexs[-1]
+            if StringUtils.isNotEmpty(webRegex.resultFormat):
+                result_formats = webRegex.resultFormat.split(".")
+                for rf in result_formats:
+                    parse_data = parse_data[rf]
+            if webRegex.regexContent in parse_data:
+                totalPageStr = str(parse_data[webRegex.regexContent])
         if StringUtils.isEmpty(totalPageStr):
             return 0
         return int(totalPageStr)

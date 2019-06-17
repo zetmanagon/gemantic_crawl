@@ -48,6 +48,10 @@ class WebSeed:
         self.pageRenderType = int(jsonData["pageRenderType"])
         self.renderSeconds = int(jsonData["renderSeconds"])
         self.nocontentRender = int(jsonData["nocontentRender"])
+        if StringUtils.isNotEmpty(str(jsonData["headers"])):
+            self.headers = eval(jsonData["headers"])
+        else:
+            self.headers = None
         self.site = jsonData["site"]
         self.domain = jsonData["domain"]
         self.url = str(jsonData["url"])

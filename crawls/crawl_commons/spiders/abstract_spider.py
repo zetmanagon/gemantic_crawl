@@ -256,10 +256,13 @@ class AbstractSpider(object):
 
 
     def do_request(self,url, meta,dont_filter=False,cleanup=False):
+        headers = None
+        if "seedInfo" in meta:
+            headers = meta["seedInfo"].headers
         if "parse" in meta and meta["parse"] == "detail" :
-            return scrapy.Request(url=url, meta=meta, callback=self.parseDetail,dont_filter=dont_filter)
+            return scrapy.Request(url=url, meta=meta,headers=headers, callback=self.parseDetail,dont_filter=dont_filter)
         else:
-            return scrapy.Request(url=url, meta=meta, callback=self.parse,dont_filter=dont_filter)
+            return scrapy.Request(url=url, meta=meta,headers=headers, callback=self.parse,dont_filter=dont_filter)
 
 
 
