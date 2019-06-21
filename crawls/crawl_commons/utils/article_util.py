@@ -32,6 +32,8 @@ class ArticleUtils(object):
     ERROR_PAGE_CONTENT_PATTERN = re.compile(u'.*?(页面已删除|请开启JavaScript|页面不存在|资源可能已被删除|请用新域名访问|BadGateway|BadRequest|ErrorPage).*')
 
     ERROR_URL_PATTERN = re.compile(u'^((?!www.gov.cn/zhuanti/|www.china.com.cn/zhibo/|www.mct.gov.cn/vipchat/|fangtan).)*$')
+    POSITIONS_SPECIAL_TAG_TEXTS = ["的位置：","当前的位置:","现在的位置:","所在的位置:","当前位置：","当前位置:","所在位置：","所在位置:","字体：","分享到：","浏览次数:","字号：","字号:", "短网址：","浏览次数:"]
+
 
     @classmethod
     def removeTag4Content(cls, str):
@@ -104,7 +106,7 @@ class ArticleUtils(object):
 
     @classmethod
     def getHtmlSpecialTag(cls, html, response):
-        footers = response.xpath('//footer|//*[@class="footer"]|//form').extract()
+        footers = response.xpath('//footer|//*[@class="footer"]|//form|//select').extract()
         # 引用外部源
         blockquotes = response.xpath('//blockquote|//script|//noscript').extract()
         # 隐含网页文本去掉
@@ -130,7 +132,17 @@ class ArticleUtils(object):
     def removeHtmlSpecialTag4Content(cls, html, response):
         allnodes = ArticleUtils.getHtmlSpecialTag(html,response)
         # 位置
-        positonsTags = response.xpath('//*[contains(text(),"现在的位置：") or contains(text(),"所在的位置：")  or contains(text(),"所在位置：") or contains(text(),"当前位置：") or contains(text(),"当前的位置：") or contains(text(),"字体：") or contains(text(),"分享到：") or contains(text(),"短网址：") or contains(text(),"字号:") or contains(text(),"字号:") or contains(text(),"浏览次数:")]').extract()
+        positonsTagsStr = None
+        containsStr = 'contains(text(),"%s")'
+        for pt in ArticleUtils.POSITIONS_SPECIAL_TAG_TEXTS:
+            containsTmp = containsStr % pt
+            if positonsTagsStr is None:
+                positonsTagsStr = containsTmp
+            else:
+                positonsTagsStr = positonsTagsStr + " or " + containsTmp
+        positonsTagsStr = "//*["+ positonsTagsStr + "]"
+        # positonsTags = response.xpath('//*[contains(text(),"现在的位置：") or contains(text(),"所在的位置：")  or contains(text(),"所在位置：") or contains(text(),"当前位置：") or contains(text(),"当前位置:") or contains(text(),"当前的位置：") or contains(text(),"字体：") or contains(text(),"分享到：") or contains(text(),"短网址：") or contains(text(),"字号:") or contains(text(),"字号:") or contains(text(),"浏览次数:")]').extract()
+        positonsTags = response.xpath(positonsTagsStr).extract()
         allnodes = allnodes + positonsTags
         allnodes = sorted(allnodes,key=lambda x:len(x),reverse=True)
         # print("positonsTags---------------",positonsTags)
