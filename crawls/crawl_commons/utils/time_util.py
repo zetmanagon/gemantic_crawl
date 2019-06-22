@@ -37,6 +37,8 @@ class TimeUtils(object):
         result = None
         if StringUtils.isNotEmpty(format) and "pre_time" == format:
             result = TimeUtils.convert2Mill(timeStr)
+        if StringUtils.isNotEmpty(format) and "mill" == format:
+            result = int(StringUtils.trim(timeStr))
         if result is not None:
             return result
         if StringUtils.isNotEmpty(format):

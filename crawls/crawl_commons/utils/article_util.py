@@ -812,13 +812,13 @@ class ArticleUtils(object):
                 data_field = webRegex.regexField
                 if "list" == data_field:
                     if StringUtils.isNotEmpty(webRegex.resultFilterRegex):
-                        json_value = webRegex.resultFilterRegex.replace("{id}",json_value)
-                        print(json_value)
+                        json_value = webRegex.resultFilterRegex.replace("{id}",str(int(json_value)))
+                        # print(json_value)
                     url_array.append(json_value)
                     continue
                 dataValue = None
                 if data_field.endswith("At"):
-                    dataValue = TimeUtils.convert2Mill4Default(json_value, "", True)
+                    dataValue = TimeUtils.convert2Mill4Default(json_value, webRegex.resultFormat, True)
                 else:
                     dataValue = json_value
                 data_array = []
@@ -844,6 +844,9 @@ class ArticleUtils(object):
                 totalPageStr = str(parse_data[webRegex.regexContent])
         if StringUtils.isEmpty(totalPageStr):
             return 0
+        print("totalPageStr:"+totalPageStr)
+        if "." in totalPageStr:
+            totalPageStr = totalPageStr.split(".")[0]
         return int(totalPageStr)
 
 
