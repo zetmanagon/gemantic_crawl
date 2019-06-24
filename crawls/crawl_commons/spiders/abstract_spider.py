@@ -120,15 +120,19 @@ class AbstractSpider(object):
             if isDetail and not self.isHistory and json_data is not None and i >= self.json_new_max_size:
                 break
             isVaildUrl = True
-            if "json" != listRegex.regexType and StringUtils.isNotEmpty(listRegex.resultFilterRegex):
+            if "json" != listRegex.regexType and "{id}" not in listRegex.resultFilterRegex and StringUtils.isNotEmpty(listRegex.resultFilterRegex):
                 isVaildUrl = re.match(listRegex.resultFilterRegex, detailUrl)
             if not isVaildUrl:
                 continue
-            targetUrl = ArticleUtils.getFullUrl(detailUrl, response.url)
+            targetUrl = detailUrl
+            if "{id}" in listRegex.resultFilterRegex:
+                targetUrl = listRegex.resultFilterRegex.replace("{id}",targetUrl)
+            else:
+                targetUrl = ArticleUtils.getFullUrl(targetUrl, response.url)
             if ArticleUtils.isErrorUrl(targetUrl):
                 continue
             if depthNumber == 0:
-                targetUrl = ArticleUtils.getFullUrl(detailUrl, seed.url)
+                targetUrl = ArticleUtils.getFullUrl(targetUrl, seed.url)
             # self.LOG.info("isDetail %s targetUrl %s" % (str(isDetail), targetUrl))
             # if domain not in targetUrl:
             #     continue
@@ -177,8 +181,13 @@ class AbstractSpider(object):
 
 
         if self.isHistory:
-
-            if StringUtils.isNotEmpty(seed.pagingUrl):
+            if StringUtils.isNotEmpty(seed.formData) and listRegex.maxPageNumber > pageNumber:
+                pageNumber = pageNumber + 1
+                metaCopy = meta.copy()
+                metaCopy["pageNumber"] = pageNumber
+                self.LOG.info("pageNumber %d formData %s" % (pageNumber,seed.formData))
+                yield self.do_request(url=seed.targetUrl, meta=metaCopy)
+            elif StringUtils.isNotEmpty(seed.pagingUrl):
                 if "totalPage" not in regexDict:
                     if len(detailUrls) > 0:
                         pageNumber = pageNumber + 1
@@ -257,12 +266,22 @@ class AbstractSpider(object):
 
     def do_request(self,url, meta,dont_filter=False,cleanup=False):
         headers = None
+        formData = None
+        pageNumber = None
         if "seedInfo" in meta:
             headers = meta["seedInfo"].headers
+            formData = meta["seedInfo"].formData
+        if "pageNumber" in meta:
+            pageNumber = str(meta["pageNumber"])
         if "parse" in meta and meta["parse"] == "detail" :
             return scrapy.Request(url=url, meta=meta,headers=headers, callback=self.parseDetail,dont_filter=dont_filter)
         else:
-            return scrapy.Request(url=url, meta=meta,headers=headers, callback=self.parse,dont_filter=dont_filter)
+            if StringUtils.isNotEmpty(formData) and StringUtils.isNotEmpty(pageNumber):
+                formData = formData.replace("{pageNumber}",pageNumber)
+                formDataDict = eval(formData)
+                return scrapy.FormRequest(url=url, meta=meta, headers=headers,formdata=formDataDict, callback=self.parse, dont_filter=dont_filter)
+            else:
+                return scrapy.Request(url=url, meta=meta,headers=headers, callback=self.parse,dont_filter=dont_filter)
 
 
 

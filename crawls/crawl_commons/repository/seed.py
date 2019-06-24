@@ -52,6 +52,7 @@ class WebSeed:
             self.headers = eval(jsonData["headers"])
         else:
             self.headers = None
+        self.formData = jsonData["formData"]
         self.site = jsonData["site"]
         self.domain = jsonData["domain"]
         self.url = str(jsonData["url"])
