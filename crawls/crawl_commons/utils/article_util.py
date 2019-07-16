@@ -812,7 +812,7 @@ class ArticleUtils(object):
                 data_field = webRegex.regexField
                 if "list" == data_field:
                     if StringUtils.isNotEmpty(webRegex.resultFilterRegex):
-                        json_value = webRegex.resultFilterRegex.replace("{id}",str(int(json_value)))
+                        json_value = webRegex.resultFilterRegex.replace("{id}",str(json_value))
                         # print(json_value)
                     url_array.append(json_value)
                     continue

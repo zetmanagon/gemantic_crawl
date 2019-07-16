@@ -125,7 +125,7 @@ class AbstractSpider(object):
             if not isVaildUrl:
                 continue
             targetUrl = detailUrl
-            if "{id}" in listRegex.resultFilterRegex:
+            if "json" != listRegex.regexType and "{id}" in listRegex.resultFilterRegex:
                 targetUrl = listRegex.resultFilterRegex.replace("{id}",targetUrl)
             else:
                 targetUrl = ArticleUtils.getFullUrl(targetUrl, response.url)
