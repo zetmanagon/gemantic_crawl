@@ -16,11 +16,11 @@ NEWSPIDER_MODULE = 'crawl_selected.spiders'
 
 
 #######数据库配置######################################
-MONGO_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
+MONGO_URI = 'mongodb://test:test@10.0.0.173:27017/test_yyh'
 MONGO_DB = 'test_yyh'
 
 
-MONGO_OFFLINE_URI = 'mongodb://test:test@10.0.0.157:27017/test_yyh'
+MONGO_OFFLINE_URI = 'mongodb://test:test@10.0.0.173:27017/test_yyh'
 MONGO_OFFLINE_DB = 'test_yyh'
 
 

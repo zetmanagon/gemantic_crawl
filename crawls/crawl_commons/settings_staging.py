@@ -15,10 +15,10 @@ SPIDER_MODULES = ['crawl_selected.spiders','crawl_auto.spiders']
 NEWSPIDER_MODULE = 'crawl_selected.spiders'
 
 #######数据库配置######################################
-MONGO_URI = 'mongodb://crawl:crawl2get@10.0.0.157:27017/crawl'
+MONGO_URI = 'mongodb://crawl:crawl2get@10.0.0.173:27017/crawl'
 MONGO_DB = 'crawl'
 
-MONGO_OFFLINE_URI = 'mongodb://crawl:crawl2get@10.0.0.157:27017/crawl'
+MONGO_OFFLINE_URI = 'mongodb://crawl:crawl2get@10.0.0.173:27017/crawl'
 MONGO_OFFLINE_DB = 'crawl'
 
 # MYSQL_IP = '10.0.0.20'
