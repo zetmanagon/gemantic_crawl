@@ -57,7 +57,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 continue
             metaCopy = meta.copy()
             metaCopy['anchorText'] = ArticleUtils.clearListTitle(link_list[url][0])
-            if len(metaCopy['anchorText'])>=200:
+            if len(metaCopy['anchorText'])>150:
                 metaCopy['anchorText'] = ''
             for resUrl in self.restrictContentTitle:
                 if ArticleUtils.isSameSite(resUrl, start_url):
