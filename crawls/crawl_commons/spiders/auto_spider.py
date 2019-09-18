@@ -56,11 +56,12 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if ArticleUtils.isErrorUrl(url):
                 continue
             metaCopy = meta.copy()
+            metaCopy['anchorText'] = ArticleUtils.clearListTitle(link_list[url][0])
+            if len(metaCopy['anchorText'])>=120:
+                metaCopy['anchorText'] = ''
             for resUrl in self.restrictContentTitle:
                 if ArticleUtils.isSameSite(resUrl, start_url):
                     metaCopy['anchorText'] = ''
-                else:
-                    metaCopy['anchorText'] = ArticleUtils.clearListTitle(link_list[url][0])
             metaCopy['anchorTime'] = link_list[url][1]
             metaCopy['parse'] = 'detail'
             metaCopy["contentPageNumber"] = 1
