@@ -51,3 +51,26 @@ class AutoSpider9(AutoSpider):  # 需要继承scrapy.Spider类
 #单独测试使用
 class AutoSpider10(AutoSpider):  # 需要继承scrapy.Spider类
     name= "auto_spider10" # 定义蜘蛛名
+
+
+#单独测试使用
+class AutoSpider11(AutoSpider):  # 需要继承scrapy.Spider类
+    name= "auto_spider11" # 定义蜘蛛名
+
+#单独测试使用
+class AutoSpider12(AutoSpider):  # 需要继承scrapy.Spider类
+    name= "auto_spider12" # 定义蜘蛛名
+
+
+#单独测试使用
+class AutoSpider13(AutoSpider):  # 需要继承scrapy.Spider类
+    name= "auto_spider13" # 定义蜘蛛名
+
+#单独测试使用
+class AutoSpider14(AutoSpider):  # 需要继承scrapy.Spider类
+    name= "auto_spider14" # 定义蜘蛛名
+
+
+#单独测试使用
+class AutoSpider15(AutoSpider):  # 需要继承scrapy.Spider类
+    name= "auto_spider15" # 定义蜘蛛名
