@@ -485,6 +485,7 @@ class ArticleUtils(object):
                     continue
                 nextUrlTmp = nextUrlTmp.replace('"', "")
                 nextUrlTmp = nextUrlTmp.replace("'", "")
+                nextUrlTmp = nextUrlTmp.replace("\/","/")
                 if StringUtils.isEmpty(nextUrlTmp):
                     continue
                 if StringUtils.isNotEmpty(resultFilterRegex) and not re.match(resultFilterRegex, nextUrlTmp):
@@ -652,6 +653,7 @@ class ArticleUtils(object):
         if " - " in headTitle and len(StringUtils.trim(headTitle.split(" - ")[0])) >=5:
             return StringUtils.trim(ArticleUtils.removeAllTag(headTitle.split(" - ")[0]))
         return StringUtils.trim(ArticleUtils.removeAllTag(headTitle))
+
 
     @classmethod
     def isErrorUrl(cls, url):

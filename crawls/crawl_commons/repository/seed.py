@@ -65,6 +65,7 @@ class WebSeed:
         self.enableDownloadImage = int(jsonData["enableDownloadImage"])
         self.enableSnapshot = int(jsonData["enableSnapshot"])
         self.depthCount = int(jsonData["depthCount"])
+        self.maxRecordNumber = int(jsonData["maxRecordNumber"])
 
     def __str__(self):
         return StringUtils.dict2Json(self.__dict__)

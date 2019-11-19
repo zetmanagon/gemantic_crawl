@@ -115,10 +115,13 @@ class AbstractSpider(object):
         if depthNumber + 1 < regexList[-1].depthNumber:
             isDetail = False
         detailUrlsLength = len(detailUrls)
+        self.LOG.info("detailUrlsLength %d" % detailUrlsLength)
         for i, detailUrl in enumerate(detailUrls):
-            #json数据解析，当前页只读取前30条记录
-            if isDetail and not self.isHistory and json_data is not None and i >= self.json_new_max_size:
+            if isDetail and not self.isHistory and seed.maxRecordNumber > 0 and i > seed.maxRecordNumber:
                 break
+            #json数据解析，当前页只读取前30条记录
+            # if isDetail and not self.isHistory and json_data is not None and i >= self.json_new_max_size:
+            #     break
             isVaildUrl = True
             if "json" != listRegex.regexType and "{id}" not in listRegex.resultFilterRegex and StringUtils.isNotEmpty(listRegex.resultFilterRegex):
                 isVaildUrl = re.match(listRegex.resultFilterRegex, detailUrl)
