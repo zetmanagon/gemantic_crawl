@@ -66,9 +66,9 @@ if __name__ == '__main__':
                 schedule.every(int(scheduleEvery)).hours.do(runSpider, url, project,crawlName)
         elif "MINUTE" == scheduleType:
             if "1" == scheduleEvery:
-                schedule.every().minute.do(runSpider, url, project,crawlName)
+                schedule.every().minutes.do(runSpider, url, project,crawlName)
             else:
-                schedule.every(int(scheduleEvery)).minute.do(runSpider, url, project,crawlName)
+                schedule.every(int(scheduleEvery)).minutes.do(runSpider, url, project,crawlName)
     while True:
         schedule.run_pending()
         time.sleep(1)
