@@ -145,62 +145,6 @@ class TimeUtils(object):
             timMill = timelist[0]
         if timMill is None:
             return 0
-        if timMill < 0:
+        if timMill < 0 or timMill > now:
             timMill = 0
         return timMill
-
-    # @classmethod
-    # def get_conent_time(cls, html):
-    #     '''
-    #     提取时间,并转化为时间戳
-    #     @param response
-    #     @return 时间戳
-    #     '''
-    #     link_list = re.findall(
-    #         r"((\d{4}|\d{2})(\-|\/|\.)\d{1,2}\3\d{1,2})(\s?\d{2}:\d{2})?|(\d{4}年\d{1,2}月\d{1,2}日)(\s?\d{2}:\d{2})?",
-    #         html)
-    #     timMill = None
-    #     # print(link_list)
-    #     if link_list != []:
-    #         for t in link_list:
-    #             if t[5] != '':
-    #                 try:
-    #                     time_get = t[0]
-    #                     for ele in t:
-    #                         if time_get.find(ele) == -1:
-    #                             time_get += ele
-    #                     # print(time_get)
-    #                     timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
-    #                 except OverflowError:
-    #                     i = 0
-    #                     while i < len(link_list):
-    #                         time_get = link_list[i][0]
-    #                         for ele in link_list[i]:
-    #                             if time_get.find(ele) == -1:
-    #                                 time_get += ele
-    #                         # print(time_get)
-    #                         try:
-    #                             timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
-    #                         except OverflowError:
-    #                             i = i + 1
-    #                             continue
-    #                         break
-    #             else:
-    #                 i = 0
-    #                 while i < len(link_list):
-    #                     time_get = link_list[i][0]
-    #                     for ele in link_list[i]:
-    #                         if time_get.find(ele) == -1:
-    #                             time_get += ele
-    #                     # print(time_get)
-    #                     try:
-    #                         timMill = TimeUtils.convert2Mill4Default(time_get, "", True)
-    #                     except OverflowError:
-    #                         i = i + 1
-    #                         continue
-    #                     break
-    #     if timMill is None:
-    #         return 0
-    #     if timMill < 0:
-    #         timMill = 0
-    #     return timMill
