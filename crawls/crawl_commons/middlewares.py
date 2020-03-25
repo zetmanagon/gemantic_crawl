@@ -86,6 +86,7 @@ class CrawlSelectedDownloaderMiddleware(object):
         options = webdriver.FirefoxOptions()
         options.add_argument('--disable-gpu')
         options.add_argument('--headless')
+        options.log.level = "fatal"
         firefox_profile = webdriver.FirefoxProfile()
         #禁用图片
         firefox_profile.set_preference('permissions.default.image', 2)  # 某些firefox只需要这个

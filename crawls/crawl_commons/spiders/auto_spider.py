@@ -57,7 +57,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 continue
             metaCopy = meta.copy()
             metaCopy['anchorText'] = ArticleUtils.clearListTitle(link_list[url][0])
-            if len(metaCopy['anchorText'])>120:
+            metaCopy['anchorTextType'] = link_list[url][2]
+            if "href_title" not in metaCopy['anchorTextType'] and len(metaCopy['anchorText'])>120:
                 metaCopy['anchorText'] = ''
             for resUrl in self.restrictContentTitle:
                 if ArticleUtils.isSameSite(resUrl, start_url):
@@ -68,7 +69,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             if not ArticleUtils.isFile(url):
                 yield self.do_request(url=url, meta=metaCopy)
             else:
-                listData = {"title":metaCopy['anchorText'],"publishAt":metaCopy['anchorTime']}
+                listData = {"title":metaCopy['anchorText'],"publishAt":metaCopy['anchorTime'],"anchorTextType":metaCopy['anchorTextType']}
                 metaCopy['listData'] = listData
                 self.crawlDB.saveFileCrawlDetail(metaCopy, url)
                 # item = self.parseFileurl(url=url, meta=metaCopy)
@@ -114,7 +115,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             # if len(detailData["title"]) <= len(meta['anchorText']):
             #     detailData["title"] = meta['anchorText']
             detailData["title"] = meta['anchorText'].strip()
-            if detailData["title"].find('...') != -1 or detailData["title"].find("…") != -1 or detailData["title"] == '' or len(detailData["title"])<=2:
+            anchorTextType = meta['anchorTextType']
+            if ("href_title" not in anchorTextType and (detailData["title"].find('...') != -1 or detailData["title"].find("…") != -1)) or detailData["title"] == '' or len(detailData["title"])<=2:
                 detailData["title"] = ArticleUtils.cleanHeadTitle(doc.title())
             if 'anchorTime' in meta and meta['anchorTime'] > 0:
                 detailData["publishAt"] = meta['anchorTime']
@@ -184,8 +186,8 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             'http://www.anshun.gov.cn',
             'guizhou.gov.cn'
         ]
-        print('*******************************************')
-        print(starturl)
+        # print('*******************************************')
+        # print(starturl)
         '''
         从初始页面中提取列表url
         @param starturl：初始url
@@ -193,11 +195,11 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
         @return url 字典{url：锚文本}
         '''
         a_tags = response.xpath('//a')
-        print('-------------------------------')
-        print('所有的链接数目', len(a_tags))
+        # print('-------------------------------')
+        # print('所有的链接数目', len(a_tags))
 
         href_parent = self.getSameParent(starturl, a_tags, fine=False)
-
+        # print('------------------------')
         onlyFlag =True
         minNum = 1
         for resUrl in minNumZero:
@@ -206,11 +208,12 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 minNum = 0
         # print(onlyFlag+minNum)
         final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=False, minNum = minNum)
-        print('过滤后的链接数目', len(final_urls))
         if len(final_urls) == 0:
             final_urls = self.listFilter(href_parent, 10.8, 5.5, only= onlyFlag, max=True, minNum = minNum)
-            print('max过滤后的链接数目', len(final_urls))
+            # print('max过滤后的链接数目', len(final_urls))
+        print('过滤后的链接数目', len(final_urls))
         return final_urls
+        # return {}
 
     def removeNum(self,str):
         '''
@@ -263,13 +266,13 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             child_count = 0
             child_total_length = 0
             word_count = 0
-            print('------------------------')
-            for child_tag, text, length, href, _ in href_parent[father_node]:
+            # print('------------------------')
+            for child_tag, title, length, href, _,title_type in href_parent[father_node]:
                 child_count += 1
-                child_total_length += len(text.strip())
-                word_count += len(" ".join(jieba.cut(text.strip())).split(" "))
+                child_total_length += len(title.strip())
+                word_count += len(" ".join(jieba.cut(title.strip())).split(" "))
                 # 链接描述平均字数和次数都大于阈值
-                print(text.strip(), '|', href)
+                # print(title.strip(), '|', href)
             averageChildLength = child_total_length / child_count
             averageChildWords = word_count / child_count
             # 记录max
@@ -277,22 +280,22 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                     averageChildLength) not in fibbdenchars:
                 maxLength = child_total_length / child_count
                 maxName = father_node
-            print(father_node, child_count, averageChildLength, averageChildWords)
+            # print(father_node, child_count, averageChildLength, averageChildWords)
             # print(self.removeNum(father_node) in allowedtree)
             # print(self.removeNum(father_node) == fibbdentree[0])
             # print(self.removeNum(father_node))
             # print(self.removeNum(fibbdentree[0]))
             if (averageChildLength > averageLength and averageChildWords > averageWordCounts and child_count > minNum) or self.removeNum(father_node) in allowedtree:
                 if self.removeNum(father_node) not in fibbdentree:
-                    print("ture")
-                    for _, text, _, href, time in href_parent[father_node]:
-                        urls[href] = [text, time]
+                    # print("ture")
+                    for _, title, _, href, time,title_type in href_parent[father_node]:
+                        urls[href] = [title, time,title_type]
                     listList.append(urls)
-        print('-------------------------------')
+        # print('-------------------------------')
         final_list = dict()
         if max is True:
-            for _, text, _, href, time in href_parent[maxName]:
-                final_list[href] = [text, time]
+            for _, title, _, href, time,title_type in href_parent[maxName]:
+                final_list[href] = [title, time,title_type]
             return final_list
         if only is True:
             for l in listList:
@@ -331,10 +334,14 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
             # 获取a标题文本内容，无内容的链接不抓取
                 # 获取a标题文本内容，无内容的链接不抓取
             title = a_tag.xpath("@title").extract_first()
+            #title 的类型
+            title_type = "href_title"
             if StringUtils.isNotEmpty(title) and ("http" in title or href in title or title in href):
                 title = ""
+                title_type = "href_blank"
             if StringUtils.isEmpty(title):
                 title = "".join(a_tag.xpath('text()').extract())
+                title_type = "href_text"
 
             # onmouseout http://www.sc.gov.cn/10462/cwh/cwhhg/cwhhg.shtml
             title = StringUtils.trim(title)
@@ -368,7 +375,7 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 hasPubTimeUrls.append(href)
             elif time <=0 and href in hasPubTimeUrls:
                 continue
-            print(href, title, time)
+            # print(href, title, time,title_type)
             # print('*'*20)
 
             # print (time)
@@ -392,22 +399,22 @@ class AutoSpider(scrapy.Spider, AbstractSpider):  # 需要继承scrapy.Spider类
                 if fine is True:
                     if father_name not in href_parent:
                         lastname = father_name
-                        href_parent[father_name] = [(a_tag, title, len(title), href, time)]
+                        href_parent[father_name] = [(a_tag, title, len(title), href, time,title_type)]
                         print(father_name + ":" + href)
                     elif father_name == lastname or lastname.endswith(father_name) == True:
-                        href_parent[lastname].append((a_tag, title, len(title), href, time))
+                        href_parent[lastname].append((a_tag, title, len(title), href, time,title_type))
                         print(lastname + ":" + href)
                     else:
                         father_name = str(i) + father_name
                         i = i + 1
-                        href_parent[father_name] = [(a_tag, title, len(title), href, time)]
+                        href_parent[father_name] = [(a_tag, title, len(title), href, time,title_type)]
                         print(father_name + ":" + href)
                         lastname = father_name
                 else:
                     if father_name not in href_parent:
-                        href_parent[father_name] = [(a_tag, title, len(title), href, time)]
+                        href_parent[father_name] = [(a_tag, title, len(title), href, time,title_type)]
                     else:
-                        href_parent[father_name].append((a_tag, title, len(title), href, time))
+                        href_parent[father_name].append((a_tag, title, len(title), href, time,title_type))
         return href_parent
 
     def classExtract(self, xpath):
