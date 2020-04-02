@@ -36,13 +36,13 @@ class StringUtils(object):
         dd = dd.replace('\t', ' ')
         dd = dd.replace('\r', ' ')
         dd = dd.replace('\r\n', ' ')
-        dd = dd.replace(u'\xa0', ' ')
+        dd = dd.replace(u'\xa0',' ')
         dd = dd.replace(u'\u3000', ' ')
         dd = dd.replace(u'\u2002',' ')
         dd = dd.replace(u'\ufeff',' ')
         dd = dd.replace(u'\uf06e',' ')
-        dd = dd.replace(u'\uf06c', ' ')
-        dd = dd.replace(u'\ue4cf', ' ')
+        dd = dd.replace(u'\uf06c',' ')
+        dd = dd.replace(u'\ue4cf',' ')
         return dd
 
     @classmethod
